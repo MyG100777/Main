@@ -34,7 +34,7 @@ local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
 Tabs.Main:AddSection("Config")
 
 local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
-    Title = " 📷 Unlock Zoom ",
+    Title = " 📷Unlock Zoom ",
     Description = "ปลดล็อกการซูมแบบไม่จำกัด",
     Default = false
 })
@@ -51,7 +51,7 @@ end)
 
 --// Remove VIP Wall
 Tabs.Main:AddButton({
-    Title = "Remove VIP Wall",
+    Title = "🧱Remove VIP Wall",
     Description = "ลบกำแพง VIP ออกไป",
     Callback = function()
         local map = workspace:FindFirstChild("DefaultMap_SharedInstances")
