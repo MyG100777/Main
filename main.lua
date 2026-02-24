@@ -31,10 +31,7 @@ local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
 local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
 
 --// ===== MAIN TAB =====
-Tabs.Main:AddParagraph({
-    Title = "Camera",
-    Content = "Unlock camera zoom without limits"
-})
+Tabs.Main:AddSection("Config")
 
 local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
     Title = " 📷 Unlock Zoom ",
