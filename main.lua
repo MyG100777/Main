@@ -18,7 +18,7 @@ local InterfaceManager = loadstring(game:HttpGet(
 --// =====================================================
 local Window = Fluent:CreateWindow({
     Title = "Escape Tsunami | Brainrots",
-    SubTitle = "Gzuss",
+    SubTitle = "By Gzuss",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -38,7 +38,7 @@ local Tabs = {
 local Options = Fluent.Options
 
 --// =====================================================
---// SERVICES & PLAYER CACHE
+--// SERVICES & PLAYER
 --// =====================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -46,6 +46,18 @@ local LocalPlayer = Players.LocalPlayer
 -- Camera defaults
 local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
 local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
+
+-- Initial Player Stats
+local InitialSpeed = LocalPlayer:GetAttribute("CurrentSpeed") or 10
+local InitialJump  = LocalPlayer:GetAttribute("JumpUpgrade") or 1
+
+-- UI references
+local PlayerSpeedSlider
+local JumpUpgradeSlider
+
+-- ProximityPrompt
+local PromptDefaults = {}
+local PromptConnection
 
 --// =====================================================
 --// MAIN TAB
@@ -113,14 +125,10 @@ local InstantPromptToggle = Tabs.Main:AddToggle("InstantPrompt", {
     Default = false
 })
 
-local PromptDefaults = {}
-local PromptConnection
-
 local function ApplyPrompt(prompt, enabled)
     if not PromptDefaults[prompt] then
         PromptDefaults[prompt] = prompt.HoldDuration
     end
-
     prompt.HoldDuration = enabled and 0 or PromptDefaults[prompt]
 end
 
@@ -156,51 +164,45 @@ end)
 --// =====================================================
 Tabs.Misc:AddSection("🧍 Player")
 
-local SpeedValue
-local JumpValue
-
-local function FindPlayerValues()
-    SpeedValue = LocalPlayer:FindFirstChild("CurrentSpeed", true)
-    JumpValue = LocalPlayer:FindFirstChild("JumpUpgrade", true)
-end
-
-FindPlayerValues()
-
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    FindPlayerValues()
-end)
-
-local DefaultSpeed = SpeedValue and SpeedValue.Value or 10
-local DefaultJump  = JumpValue and JumpValue.Value or 1
-
--- 🚀 Speed
-Tabs.Misc:AddSlider("PlayerSpeed", {
+PlayerSpeedSlider = Tabs.Misc:AddSlider("PlayerSpeed", {
     Title = "🚀 Player Speed",
-    Description = "ปรับค่า CurrentSpeed",
-    Default = DefaultSpeed,
+    Description = "ปรับความเร็วการเดิน",
+    Default = InitialSpeed,
     Min = 0,
-    Max = 500,
+    Max = 1200,
     Rounding = 1,
     Callback = function(value)
-        if SpeedValue then
-            SpeedValue.Value = value
-        end
+        LocalPlayer:SetAttribute("CurrentSpeed", value)
     end
 })
 
--- 🦘 Jump
-Tabs.Misc:AddSlider("JumpUpgrade", {
+JumpUpgradeSlider = Tabs.Misc:AddSlider("JumpUpgrade", {
     Title = "🦘 Jump Upgrade",
-    Description = "ปรับค่า JumpUpgrade",
-    Default = DefaultJump,
+    Description = "ปรับกระโดดสูง",
+    Default = InitialJump,
     Min = 0,
-    Max = 200,
+    Max = 1000,
     Rounding = 1,
     Callback = function(value)
-        if JumpValue then
-            JumpValue.Value = value
-        end
+        LocalPlayer:SetAttribute("JumpUpgrade", value)
+    end
+})
+
+Tabs.Misc:AddButton({
+    Title = "🔄 Reset Player Stats",
+    Description = "รีเซ็ตความเร็วและการกระโดดกลับค่าเริ่มต้น",
+    Callback = function()
+        LocalPlayer:SetAttribute("CurrentSpeed", InitialSpeed)
+        LocalPlayer:SetAttribute("JumpUpgrade", InitialJump)
+
+        PlayerSpeedSlider:SetValue(InitialSpeed)
+        JumpUpgradeSlider:SetValue(InitialJump)
+
+        Fluent:Notify({
+            Title = "Reset Complete",
+            Content = "รีเซ็ตค่าผู้เล่นเรียบร้อยแล้ว",
+            Duration = 4
+        })
     end
 })
 
