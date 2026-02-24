@@ -140,7 +140,7 @@ InstantPromptToggle:OnChanged(function(Value)
     end
 end)
 --// ===== Tabs Misc=====
-Tabs.Main:AddSection("🧍 Player")
+Tabs.Misc:AddSection("🧍 Player")
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
