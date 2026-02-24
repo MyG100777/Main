@@ -42,6 +42,7 @@ local Options = Fluent.Options
 --// =====================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
 -- Camera defaults
 local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
@@ -58,6 +59,18 @@ local JumpUpgradeSlider
 -- ProximityPrompt
 local PromptDefaults = {}
 local PromptConnection
+
+-- AutoFarm
+local SelectedRarities = {}
+local SelectedBrainrots = {}
+local SelectedMutations = {}
+
+local AvailableBrainrots = {}
+local FarmDelay = 1
+
+-- ตำแหน่ง Tween
+local ENTER_POS = Vector3.new(201.060852, -2.76544333, 31.488987)
+local EXIT_POS  = Vector3.new(101.060104, 3.23454332, 2.9421761)
 
 --// =====================================================
 --// MAIN TAB
@@ -157,6 +170,230 @@ InstantPromptToggle:OnChanged(function(state)
             end
         end
     end
+end)
+
+-- AutoFarm
+Tabs.Main:AddSection("🤖 AutoFarm")
+
+--// ===============================
+--// DROPDOWN : RARITY
+--// ===============================
+local RarityDropdown = Tabs.Main:AddDropdown("AF_Rarity", {
+    Title = "⭐ Select Rarity",
+    Multi = true,
+    Values = {
+        "Common","Uncommon","Rare","Epic","Legendary",
+        "Cosmic","Mythical","Secret","Celestial","Divine","Infinity"
+    },
+    Default = {}
+})
+
+RarityDropdown:OnChanged(function(v)
+    SelectedRarities = v
+end)
+
+--// ===============================
+--// DROPDOWN : BRAINROT
+--// ===============================
+local BrainrotDropdown = Tabs.Main:AddDropdown("AF_Brainrot", {
+    Title = "🧠 Select Brainrot",
+    Multi = true,
+    Values = {}
+})
+
+BrainrotDropdown:OnChanged(function(v)
+    SelectedBrainrots = v
+end)
+
+--// ===============================
+--// DROPDOWN : MUTATION
+--// ===============================
+local MutationDropdown = Tabs.Main:AddDropdown("AF_Mutation", {
+    Title = "🧬 Select Mutation",
+    Multi = true,
+    Values = {
+        "None","Emerald","Gold","Blood","Doom","Electric","UFO",
+        "Radioactive","Money","Candy","Gamer","Diamond",
+        "Admin","Hacker","Lucky"
+    },
+    Default = {"None"}
+})
+
+MutationDropdown:OnChanged(function(v)
+    SelectedMutations = v
+end)
+
+--// ===============================
+--// DELAY SLIDER
+--// ===============================
+Tabs.Main:AddSlider("AF_Delay", {
+    Title = "⏱️ Farm Delay",
+    Default = 1,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        FarmDelay = v
+    end
+})
+
+--// ===============================
+--// FUNCTIONS
+--// ===============================
+
+local function TweenTo(pos)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    TweenService:Create(
+        hrp,
+        TweenInfo.new(1, Enum.EasingStyle.Linear),
+        { CFrame = CFrame.new(pos) }
+    ):Play()
+end
+
+local function LockPlayer(state)
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+
+    if hum then
+        hum.WalkSpeed = state and 0 or 16
+        hum.JumpPower = state and 0 or 50
+    end
+
+    if hrp then
+        hrp.Anchored = state
+    end
+end
+
+local function EnableSmartNoclip()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local model = char:FindFirstChild(LocalPlayer.Name)
+    if not model then return end
+
+    local part = model:FindFirstChild("CollisionPart", true)
+    if part then
+        part.CanCollide = false
+    end
+end
+
+local function MatchMutation(model)
+    local m = model:GetAttribute("Mutation")
+    m = m and string.lower(m) or ""
+
+    if table.find(SelectedMutations, "None") then
+        return m == ""
+    end
+
+    for _, want in ipairs(SelectedMutations) do
+        if string.lower(want) == m then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function ScanBrainrots()
+    table.clear(AvailableBrainrots)
+
+    local root = workspace:FindFirstChild("ActiveBrainrots")
+    if not root then return end
+
+    for _, rarity in ipairs(SelectedRarities) do
+        local folder = root:FindFirstChild(rarity)
+        if folder then
+            for _, model in ipairs(folder:GetChildren()) do
+                local name = model:GetAttribute("BrainrotName")
+                local timeLeft = model:GetAttribute("TimeLeft")
+
+                if name and timeLeft and timeLeft > 0 then
+                    AvailableBrainrots[name] = model
+                end
+            end
+        end
+    end
+
+    local names = {}
+    for n in pairs(AvailableBrainrots) do
+        table.insert(names, n)
+    end
+
+    BrainrotDropdown:SetValues(names)
+end
+
+local function PlayerHasBrainrot()
+    local char = LocalPlayer.Character
+    if not char then return false end
+
+    for _, v in ipairs(char:GetChildren()) do
+        if v:IsA("Model") and v:GetAttribute("BrainrotName") then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function FarmBrainrot(model)
+    local root = model:FindFirstChild("Root", true)
+    if not root then return end
+
+    TweenTo(root.Position - Vector3.new(0, 5, 0))
+    task.wait(1)
+
+    local prompt = root:FindFirstChild("TakePrompt", true)
+    if not prompt then return end
+
+    repeat
+        fireproximityprompt(prompt)
+        task.wait(0.3)
+    until PlayerHasBrainrot()
+end
+
+--// ===============================
+--// AUTO FARM TOGGLE
+--// ===============================
+local AutoFarmToggle = Tabs.Main:AddToggle("AF_Toggle", {
+    Title = "🤖 Auto Farm",
+    Default = false
+})
+
+AutoFarmToggle:OnChanged(function(state)
+    if not state then
+        LockPlayer(false)
+        return
+    end
+
+    LockPlayer(true)
+    EnableSmartNoclip()
+
+    task.spawn(function()
+        while AutoFarmToggle.Value do
+            ScanBrainrots()
+
+            for _, name in ipairs(SelectedBrainrots) do
+                local model = AvailableBrainrots[name]
+                if model and MatchMutation(model) then
+                    TweenTo(ENTER_POS)
+                    task.wait(1)
+
+                    FarmBrainrot(model)
+
+                    TweenTo(EXIT_POS)
+                    task.wait(FarmDelay)
+                end
+            end
+
+            task.wait(0.5)
+        end
+    end)
 end)
 
 --// =====================================================
