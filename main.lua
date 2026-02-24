@@ -31,10 +31,10 @@ local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
 local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
 
 --// ===== MAIN TAB =====
-Tabs.Main:AddSection("⚙️Config")
+Tabs.Main:AddSection("Config")
 
 local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
-    Title = " 📷Unlock Zoom ",
+    Title = " 📷 Unlock Zoom ",
     Description = "ปลดล็อกการซูมแบบไม่จำกัด",
     Default = false
 })
@@ -51,7 +51,7 @@ end)
 
 --// Remove VIP Wall
 Tabs.Main:AddButton({
-    Title = "🧱Remove VIP Wall",
+    Title = "🧱 Remove VIP Wall",
     Description = "ลบกำแพง VIP ออกไป",
     Callback = function()
         local map = workspace:FindFirstChild("DefaultMap_SharedInstances")
@@ -81,6 +81,58 @@ Tabs.Main:AddButton({
         end
     end
 })
+
+local InstantPromptToggle = Tabs.Main:AddToggle("InstantPrompt", {
+    Title = "⚡ Instant Prompt",
+    Description = "กดปุ่มทุกอย่างได้ทันที (0 วิ)",
+    Default = false
+})
+
+-- เก็บค่าเดิม
+local PromptDefaults = {}
+local PromptConnection
+
+local function SetPrompt(prompt, enabled)
+    if not PromptDefaults[prompt] then
+        PromptDefaults[prompt] = prompt.HoldDuration
+    end
+
+    if enabled then
+        prompt.HoldDuration = 0
+    else
+        prompt.HoldDuration = PromptDefaults[prompt] or prompt.HoldDuration
+    end
+end
+
+InstantPromptToggle:OnChanged(function(Value)
+    if Value then
+        -- ของที่มีอยู่แล้ว
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") then
+                SetPrompt(v, true)
+            end
+        end
+
+        -- ของที่เกิดใหม่
+        PromptConnection = workspace.DescendantAdded:Connect(function(v)
+            if v:IsA("ProximityPrompt") then
+                SetPrompt(v, true)
+            end
+        end)
+    else
+        -- คืนค่าเดิม
+        if PromptConnection then
+            PromptConnection:Disconnect()
+            PromptConnection = nil
+        end
+
+        for prompt, duration in pairs(PromptDefaults) do
+            if prompt and prompt.Parent then
+                prompt.HoldDuration = duration
+            end
+        end
+    end
+end)
 
 --// ===== SETTINGS TAB =====
 SaveManager:SetLibrary(Fluent)
