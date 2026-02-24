@@ -31,7 +31,12 @@ local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
 local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
 
 --// ===== MAIN TAB =====
-Tabs.Main:AddSection("Config")
+Tabs.Main:AddParagraph({
+    Title = "Discord",
+    Content = "https://discord.gg/amybwznh"
+})
+
+Tabs.Main:AddSection("Main")
 
 local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
     Title = " 📷 Unlock Zoom ",
