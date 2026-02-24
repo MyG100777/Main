@@ -52,6 +52,39 @@ UnlockZoomToggle:OnChanged(function(Value)
     end
 end)
 
+--// Remove VIP Wall
+Tabs.Main:AddButton({
+    Title = "Remove VIP Wall",
+    Description = "ลบกำแพง VIP ออกไป",
+    Callback = function()
+        local map = workspace:FindFirstChild("DefaultMap_SharedInstances")
+        if not map then
+            Fluent:Notify({
+                Title = "Error",
+                Content = "ไม่พบ DefaultMap_SharedInstances",
+                Duration = 4
+            })
+            return
+        end
+
+        local vipWalls = map:FindFirstChild("VIPWalls")
+        if vipWalls then
+            vipWalls:Destroy()
+            Fluent:Notify({
+                Title = "Success",
+                Content = "ลบ VIP Wall เรียบร้อยแล้ว",
+                Duration = 4
+            })
+        else
+            Fluent:Notify({
+                Title = "Info",
+                Content = "ไม่พบ VIP Wall (อาจถูกลบไปแล้ว)",
+                Duration = 4
+            })
+        end
+    end
+})
+
 --// ===== SETTINGS TAB =====
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
