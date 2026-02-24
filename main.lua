@@ -1,9 +1,21 @@
---// Fluent UI
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+--// =====================================================
+--// LOAD FLUENT UI
+--// =====================================================
+local Fluent = loadstring(game:HttpGet(
+    "https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
+))()
 
---// Window
+local SaveManager = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"
+))()
+
+local InterfaceManager = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"
+))()
+
+--// =====================================================
+--// WINDOW
+--// =====================================================
 local Window = Fluent:CreateWindow({
     Title = "Escape Tsunami | Brainrots",
     SubTitle = "Gzuss",
@@ -14,7 +26,9 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
---// Tabs
+--// =====================================================
+--// TABS
+--// =====================================================
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
@@ -23,15 +37,19 @@ local Tabs = {
 
 local Options = Fluent.Options
 
---// Services
+--// =====================================================
+--// SERVICES & PLAYER CACHE
+--// =====================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
---// Save default zoom
+-- Camera defaults
 local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
 local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
 
---// ===== MAIN TAB =====
+--// =====================================================
+--// MAIN TAB
+--// =====================================================
 Tabs.Main:AddParagraph({
     Title = "Discord",
     Content = "https://discord.gg/amybwznh"
@@ -39,14 +57,15 @@ Tabs.Main:AddParagraph({
 
 Tabs.Main:AddSection("Main")
 
+-- 📷 Unlock Zoom
 local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
-    Title = " 📷 Unlock Zoom ",
+    Title = "📷 Unlock Zoom",
     Description = "ปลดล็อกการซูมแบบไม่จำกัด",
     Default = false
 })
 
-UnlockZoomToggle:OnChanged(function(Value)
-    if Value then
+UnlockZoomToggle:OnChanged(function(state)
+    if state then
         LocalPlayer.CameraMinZoomDistance = 0
         LocalPlayer.CameraMaxZoomDistance = 1e6
     else
@@ -55,19 +74,18 @@ UnlockZoomToggle:OnChanged(function(Value)
     end
 end)
 
---// Remove VIP Wall
+-- 🧱 Remove VIP Wall
 Tabs.Main:AddButton({
     Title = "🧱 Remove VIP Wall",
     Description = "ลบกำแพง VIP ออกไป",
     Callback = function()
         local map = workspace:FindFirstChild("DefaultMap_SharedInstances")
         if not map then
-            Fluent:Notify({
+            return Fluent:Notify({
                 Title = "Error",
                 Content = "ไม่พบ DefaultMap_SharedInstances",
                 Duration = 4
             })
-            return
         end
 
         local vipWalls = map:FindFirstChild("VIPWalls")
@@ -88,45 +106,38 @@ Tabs.Main:AddButton({
     end
 })
 
+-- ⚡ Instant Prompt
 local InstantPromptToggle = Tabs.Main:AddToggle("InstantPrompt", {
     Title = "⚡ Instant Prompt",
     Description = "กดปุ่มทุกอย่างได้ทันที (0 วิ)",
     Default = false
 })
 
--- เก็บค่าเดิม
 local PromptDefaults = {}
 local PromptConnection
 
-local function SetPrompt(prompt, enabled)
+local function ApplyPrompt(prompt, enabled)
     if not PromptDefaults[prompt] then
         PromptDefaults[prompt] = prompt.HoldDuration
     end
 
-    if enabled then
-        prompt.HoldDuration = 0
-    else
-        prompt.HoldDuration = PromptDefaults[prompt] or prompt.HoldDuration
-    end
+    prompt.HoldDuration = enabled and 0 or PromptDefaults[prompt]
 end
 
-InstantPromptToggle:OnChanged(function(Value)
-    if Value then
-        -- ของที่มีอยู่แล้ว
+InstantPromptToggle:OnChanged(function(state)
+    if state then
         for _, v in ipairs(workspace:GetDescendants()) do
             if v:IsA("ProximityPrompt") then
-                SetPrompt(v, true)
+                ApplyPrompt(v, true)
             end
         end
 
-        -- ของที่เกิดใหม่
         PromptConnection = workspace.DescendantAdded:Connect(function(v)
             if v:IsA("ProximityPrompt") then
-                SetPrompt(v, true)
+                ApplyPrompt(v, true)
             end
         end)
     else
-        -- คืนค่าเดิม
         if PromptConnection then
             PromptConnection:Disconnect()
             PromptConnection = nil
@@ -139,63 +150,63 @@ InstantPromptToggle:OnChanged(function(Value)
         end
     end
 end)
---// ===== Tabs Misc=====
-Tabs.Misc:AddSection("🧍 Player")
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+--// =====================================================
+--// MISC TAB (PLAYER)
+--// =====================================================
+Tabs.Misc:AddSection("🧍 Player")
 
 local SpeedValue
 local JumpValue
 
--- หา Value ใน Player หรือ Character
-local function FindValues()
+local function FindPlayerValues()
     SpeedValue = LocalPlayer:FindFirstChild("CurrentSpeed", true)
     JumpValue = LocalPlayer:FindFirstChild("JumpUpgrade", true)
 end
 
-FindValues()
+FindPlayerValues()
 
--- รีค้นหาเวลาเกิดใหม่
 LocalPlayer.CharacterAdded:Connect(function()
     task.wait(0.5)
-    FindValues()
+    FindPlayerValues()
 end)
 
--- อ่านค่า Default จากค่าปัจจุบันจริง
 local DefaultSpeed = SpeedValue and SpeedValue.Value or 10
-local DefaultJump = JumpValue and JumpValue.Value or 1
+local DefaultJump  = JumpValue and JumpValue.Value or 1
 
--- 🚀 Player Speed
-local SpeedSlider = Tabs.Misc:AddSlider("PlayerSpeed", {
+-- 🚀 Speed
+Tabs.Misc:AddSlider("PlayerSpeed", {
     Title = "🚀 Player Speed",
     Description = "ปรับค่า CurrentSpeed",
     Default = DefaultSpeed,
     Min = 0,
     Max = 500,
     Rounding = 1,
-    Callback = function(Value)
+    Callback = function(value)
         if SpeedValue then
-            SpeedValue.Value = Value
+            SpeedValue.Value = value
         end
     end
 })
 
--- 🦘 Jump Upgrade
-local JumpSlider = Tabs.Misc:AddSlider("JumpUpgrade", {
+-- 🦘 Jump
+Tabs.Misc:AddSlider("JumpUpgrade", {
     Title = "🦘 Jump Upgrade",
     Description = "ปรับค่า JumpUpgrade",
     Default = DefaultJump,
     Min = 0,
     Max = 200,
     Rounding = 1,
-    Callback = function(Value)
+    Callback = function(value)
         if JumpValue then
-            JumpValue.Value = Value
+            JumpValue.Value = value
         end
     end
 })
---// ===== SETTINGS TAB =====
+
+--// =====================================================
+--// SETTINGS TAB
+--// =====================================================
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
@@ -208,15 +219,15 @@ SaveManager:SetFolder("FluentScriptHub/EscapeTsunami")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
---// Default Tab
+--// =====================================================
+--// STARTUP
+--// =====================================================
 Window:SelectTab(1)
 
---// Notify
 Fluent:Notify({
     Title = "Loaded",
     Content = "Escape Tsunami script loaded successfully",
     Duration = 6
 })
 
---// Auto Load Config
 SaveManager:LoadAutoloadConfig()
