@@ -17,6 +17,7 @@ local Window = Fluent:CreateWindow({
 --// Tabs
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -138,7 +139,62 @@ InstantPromptToggle:OnChanged(function(Value)
         end
     end
 end)
+--// ===== Tabs Misc=====
+Tabs.Main:AddSection("🧍 Player")
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local SpeedValue
+local JumpValue
+
+-- หา Value ใน Player หรือ Character
+local function FindValues()
+    SpeedValue = LocalPlayer:FindFirstChild("CurrentSpeed", true)
+    JumpValue = LocalPlayer:FindFirstChild("JumpUpgrade", true)
+end
+
+FindValues()
+
+-- รีค้นหาเวลาเกิดใหม่
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    FindValues()
+end)
+
+-- อ่านค่า Default จากค่าปัจจุบันจริง
+local DefaultSpeed = SpeedValue and SpeedValue.Value or 10
+local DefaultJump = JumpValue and JumpValue.Value or 1
+
+-- 🚀 Player Speed
+local SpeedSlider = Tabs.Misc:AddSlider("PlayerSpeed", {
+    Title = "🚀 Player Speed",
+    Description = "ปรับค่า CurrentSpeed",
+    Default = DefaultSpeed,
+    Min = 0,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
+        if SpeedValue then
+            SpeedValue.Value = Value
+        end
+    end
+})
+
+-- 🦘 Jump Upgrade
+local JumpSlider = Tabs.Misc:AddSlider("JumpUpgrade", {
+    Title = "🦘 Jump Upgrade",
+    Description = "ปรับค่า JumpUpgrade",
+    Default = DefaultJump,
+    Min = 0,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(Value)
+        if JumpValue then
+            JumpValue.Value = Value
+        end
+    end
+})
 --// ===== SETTINGS TAB =====
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
