@@ -162,6 +162,88 @@ InstantPromptToggle:OnChanged(function(state)
     end
 end)
 
+Tabs.Main:AddButton({
+    Title = "🧱 WallHack",
+    Description = "ลบกำแพงทุกชนิด",
+    Callback = function()
+        -- [[ ส่วนที่ 1: หาตำแหน่งและสร้างทางเดิน ]] --
+        local targetPart = nil
+        -- ใช้ pcall กัน error กรณี map โหลดไม่ทันหรือไม่มีอยู่
+        pcall(function()
+            targetPart = workspace.DefaultMap.Gaps.Gap5:GetChildren()[2]
+        end)
+
+        if targetPart then
+            local startCFrame = targetPart.CFrame
+            
+            -- ขนาดและสีตามที่ขอ
+            local mySize = Vector3.new(6.049999237060547, 400, 2048)
+            local myColor = Color3.fromRGB(213, 115, 61)
+
+            -- วนลูปสร้าง 3 ชิ้น
+            for i = 1, 3 do
+                local p = Instance.new("Part")
+                p.Name = "LongPath_" .. i
+                p.Anchored = true
+                p.CanCollide = true
+                p.Size = mySize
+                p.Material = Enum.Material.Plastic
+                p.Color = myColor
+                
+                -- คำนวณตำแหน่งให้ต่อกัน (ไม่ทับ)
+                -- ชิ้นที่ 1: อยู่ที่เดิม, ชิ้นที่ 2: +2048, ชิ้นที่ 3: +4096
+                local offsetZ = mySize.Z * (i - 1)
+                
+                -- จัดวางตำแหน่ง
+                p.CFrame = startCFrame * CFrame.new(0, 0, offsetZ)
+                p.Parent = workspace
+            end
+
+            Fluent:Notify({
+                Title = "Success",
+                Content = "สร้างทางยาว 3 ชิ้น เรียบร้อย!",
+                Duration = 3
+            })
+        else
+            Fluent:Notify({
+                Title = "Warning",
+                Content = "หา Part ต้นฉบับ (Gap5) ไม่เจอ! (อาจจะลบไปแล้ว)",
+                Duration = 3
+            })
+        end
+
+        -- [[ ส่วนที่ 2: ลบกำแพงและสิ่งกีดขวาง ]] --
+        local DefaultMap = workspace:FindFirstChild("DefaultMap")
+        
+        if DefaultMap then
+            -- 1. ลบ Walls (ที่ขอเพิ่ม)
+            if DefaultMap:FindFirstChild("Walls") then
+                DefaultMap.Walls:ClearAllChildren()
+            end
+
+            -- 2. ลบ RightWalls
+            if DefaultMap:FindFirstChild("RightWalls") then
+                DefaultMap.RightWalls:ClearAllChildren()
+            end
+
+            -- 3. ลบ Gaps (ต้องลบทีหลังสุดเพราะเราใช้ Gap5 อ้างอิงด้านบน)
+            if DefaultMap:FindFirstChild("Gaps") then
+                DefaultMap.Gaps:Destroy()
+            end
+        end
+
+        -- 4. จัดการ Barriers (ทำให้ล่องหน + ทะลุได้)
+        local Barriers = workspace:FindFirstChild("Barriers")
+        if Barriers then
+            for _, v in pairs(Barriers:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.Transparency = 1      -- มองไม่เห็น
+                    v.CanCollide = false    -- เดินทะลุ
+                end
+            end
+        end
+    end
+})
 
 
 --// =====================================================
