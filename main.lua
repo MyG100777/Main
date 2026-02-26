@@ -1,322 +1,329 @@
---// =====================================================
---// LOAD FLUENT UI
---// =====================================================
-local Fluent = loadstring(game:HttpGet(
-    "https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
+--// Load MacLib
+local MacLib = loadstring(game:HttpGet(
+    "https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"
 ))()
 
-local SaveManager = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"
-))()
-
-local InterfaceManager = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"
-))()
-
---// =====================================================
---// WINDOW
---// =====================================================
-local Window = Fluent:CreateWindow({
-    Title = "Escape Tsunami | Brainrots",
-    SubTitle = "By Gzuss",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
---// =====================================================
---// TABS
---// =====================================================
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
-
-local Options = Fluent.Options
-
---// =====================================================
---// SERVICES & PLAYER
---// =====================================================
+-------------------------------------------------
+--// SERVICES & VARIABLES
+-------------------------------------------------
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
 
--- Camera defaults
-local DefaultMinZoom = LocalPlayer.CameraMinZoomDistance
-local DefaultMaxZoom = LocalPlayer.CameraMaxZoomDistance
+getgenv().AutoUpgrade = false
+getgenv().AutoRebirth = false
+getgenv().AutoCollectMoney = false
+getgenv().CollectDelay = 5
+getgenv().MaxDistance = 150
 
--- Initial Player Stats
-local InitialSpeed = LocalPlayer:GetAttribute("CurrentSpeed") or 10
-local InitialJump  = LocalPlayer:GetAttribute("JumpUpgrade") or 1
+-------------------------------------------------
+--// WINDOW SETUP
+-------------------------------------------------
+local Window = MacLib:Window({
+    Title = "[🧬] Jump for Brainrots!",
+    Subtitle = "By Gzuss",
+    Size = UDim2.fromOffset(860, 620),
+    DragStyle = 1,
+    AcrylicBlur = false,
+    ShowUserInfo = true,
+    Keybind = Enum.KeyCode.RightControl
+})
 
--- UI references
-local PlayerSpeedSlider
-local JumpUpgradeSlider
+local TabGroup = Window:TabGroup()
+local MainTab = TabGroup:Tab({
+    Name = "Main",
+    Image = "rbxassetid://18821914323"
+})
 
--- ProximityPrompt
+-------------------------------------------------
+--// [LEFT COLUMN] UI SECTIONS
+-------------------------------------------------
+
+-- [[ SECTION 1: MAIN FEATURES ]] --
+local MainSection = MainTab:Section({ Side = "Left" })
+MainSection:Header({ Name = "Main Features" })
+
 local PromptDefaults = {}
-local PromptConnection
-
-
-
---// =====================================================
---// MAIN TAB
---// =====================================================
-Tabs.Main:AddParagraph({
-    Title = "Discord",
-    Content = "https://discord.gg/amybwznh"
-})
-
-Tabs.Main:AddSection("Main")
-
--- 📷 Unlock Zoom
-local UnlockZoomToggle = Tabs.Main:AddToggle("UnlockZoom", {
-    Title = "📷 Unlock Zoom",
-    Description = "ปลดล็อกการซูมแบบไม่จำกัด",
-    Default = false
-})
-
-UnlockZoomToggle:OnChanged(function(state)
-    if state then
-        LocalPlayer.CameraMinZoomDistance = 0
-        LocalPlayer.CameraMaxZoomDistance = 1e6
-    else
-        LocalPlayer.CameraMinZoomDistance = DefaultMinZoom
-        LocalPlayer.CameraMaxZoomDistance = DefaultMaxZoom
-    end
-end)
-
--- 🧱 Remove VIP Wall
-Tabs.Main:AddButton({
-    Title = "🧱 Remove VIP Wall",
-    Description = "ลบกำแพง VIP ออกไป",
-    Callback = function()
-        local map = workspace:FindFirstChild("DefaultMap_SharedInstances")
-        if not map then
-            return Fluent:Notify({
-                Title = "Error",
-                Content = "ไม่พบ DefaultMap_SharedInstances",
-                Duration = 4
-            })
-        end
-
-        local vipWalls = map:FindFirstChild("VIPWalls")
-        if vipWalls then
-            vipWalls:Destroy()
-            Fluent:Notify({
-                Title = "Success",
-                Content = "ลบ VIP Wall เรียบร้อยแล้ว",
-                Duration = 4
-            })
-        else
-            Fluent:Notify({
-                Title = "Info",
-                Content = "ไม่พบ VIP Wall (อาจถูกลบไปแล้ว)",
-                Duration = 4
-            })
-        end
-    end
-})
-
--- ⚡ Instant Prompt
-local InstantPromptToggle = Tabs.Main:AddToggle("InstantPrompt", {
-    Title = "⚡ Instant Prompt",
-    Description = "กดปุ่มทุกอย่างได้ทันที (0 วิ)",
-    Default = false
-})
+local InstantPrompt = false
 
 local function ApplyPrompt(prompt, enabled)
-    if not PromptDefaults[prompt] then
-        PromptDefaults[prompt] = prompt.HoldDuration
-    end
+    if not PromptDefaults[prompt] then PromptDefaults[prompt] = prompt.HoldDuration end
     prompt.HoldDuration = enabled and 0 or PromptDefaults[prompt]
 end
 
-InstantPromptToggle:OnChanged(function(state)
-    if state then
-        for _, v in ipairs(workspace:GetDescendants()) do
-            if v:IsA("ProximityPrompt") then
-                ApplyPrompt(v, true)
-            end
-        end
+local function ApplyAllPrompts(enabled)
+    for _, v in ipairs(game:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then pcall(function() ApplyPrompt(v, enabled) end) end
+    end
+end
 
-        PromptConnection = workspace.DescendantAdded:Connect(function(v)
-            if v:IsA("ProximityPrompt") then
-                ApplyPrompt(v, true)
-            end
-        end)
-    else
-        if PromptConnection then
-            PromptConnection:Disconnect()
-            PromptConnection = nil
-        end
-
-        for prompt, duration in pairs(PromptDefaults) do
-            if prompt and prompt.Parent then
-                prompt.HoldDuration = duration
-            end
-        end
+game.DescendantAdded:Connect(function(obj)
+    if InstantPrompt and obj:IsA("ProximityPrompt") then
+        task.wait()
+        pcall(function() ApplyPrompt(obj, true) end)
     end
 end)
 
-Tabs.Main:AddButton({
-    Title = "🧱 WallHack",
-    Description = "ลบกำแพงทุกชนิด",
-    Callback = function()
-        -- [[ ส่วนที่ 1: หาตำแหน่งและสร้างทางเดิน ]] --
-        local targetPart = nil
-        -- ใช้ pcall กัน error กรณี map โหลดไม่ทันหรือไม่มีอยู่
-        pcall(function()
-            targetPart = workspace.DefaultMap.Gaps.Gap5:GetChildren()[2]
-        end)
+MainSection:Toggle({
+    Name = "⚡ Instant Prompt",
+    Default = false,
+    Callback = function(v)
+        InstantPrompt = v
+        Window:Notify({ Title = "System", Description = (v and "Enabled" or "Disabled").." Instant Prompt", Lifetime = 3 })
+        ApplyAllPrompts(v)
+    end
+})
 
-        if targetPart then
-            local startCFrame = targetPart.CFrame
-            
-            -- ขนาดและสีตามที่ขอ
-            local mySize = Vector3.new(6.049999237060547, 400, 2048)
-            local myColor = Color3.fromRGB(213, 115, 61)
+-- [[ SECTION 2: PROGRESSION ]] --
+local ProgSection = MainTab:Section({ Side = "Left" })
+ProgSection:Header({ Name = "Progression" })
 
-            -- วนลูปสร้าง 3 ชิ้น
-            for i = 1, 3 do
-                local p = Instance.new("Part")
-                p.Name = "LongPath_" .. i
-                p.Anchored = true
-                p.CanCollide = true
-                p.Size = mySize
-                p.Material = Enum.Material.Plastic
-                p.Color = myColor
-                
-                -- คำนวณตำแหน่งให้ต่อกัน (ไม่ทับ)
-                -- ชิ้นที่ 1: อยู่ที่เดิม, ชิ้นที่ 2: +2048, ชิ้นที่ 3: +4096
-                local offsetZ = mySize.Z * (i - 1)
-                
-                -- จัดวางตำแหน่ง
-                p.CFrame = startCFrame * CFrame.new(0, 0, offsetZ)
-                p.Parent = workspace
-            end
-
-            Fluent:Notify({
-                Title = "Success",
-                Content = "สร้างทางยาว 3 ชิ้น เรียบร้อย!",
-                Duration = 3
-            })
-        else
-            Fluent:Notify({
-                Title = "Warning",
-                Content = "หา Part ต้นฉบับ (Gap5) ไม่เจอ! (อาจจะลบไปแล้ว)",
-                Duration = 3
-            })
+ProgSection:Toggle({
+    Name = "Auto Buy Jump Power (+10)",
+    Default = false,
+    Callback = function(v)
+        getgenv().AutoUpgrade = v
+        if v then
+            task.spawn(function()
+                while getgenv().AutoUpgrade do
+                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UpgradeJumpBulk"):FireServer()
+                    task.wait(0.1)
+                end
+            end)
         end
+    end
+})
 
-        -- [[ ส่วนที่ 2: ลบกำแพงและสิ่งกีดขวาง ]] --
-        local DefaultMap = workspace:FindFirstChild("DefaultMap")
+ProgSection:Toggle({
+    Name = "Auto Rebirth (Smart Check)",
+    Default = false,
+    Callback = function(v)
+        getgenv().AutoRebirth = v
+        if v then
+            task.spawn(function()
+                while getgenv().AutoRebirth do
+                    task.wait(1)
+                    local player = Players.LocalPlayer
+                    if not player then break end
+                    local readyValue = player:FindFirstChild("RebirthReady")
+                    
+                    if readyValue and readyValue:IsA("BoolValue") then
+                        if readyValue.Value == true then
+                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RebirthRemote"):FireServer()
+                            Window:Notify({ Title = "System", Description = "Rebirth Success!", Lifetime = 2 })
+                            task.wait(1)
+                        else
+                            Window:Notify({ Title = "System", Description = "Not Ready! Stopping...", Lifetime = 3 })
+                            getgenv().AutoRebirth = false
+                            break
+                        end
+                    else
+                         -- Attribute Fallback Logic Here
+                         local attrReady = player:GetAttribute("RebirthReady")
+                         if attrReady == true then
+                             ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RebirthRemote"):FireServer()
+                             task.wait(1)
+                         elseif attrReady == false then
+                             Window:Notify({ Title = "System", Description = "Not Ready (Attr)! Stopping.", Lifetime = 3 })
+                             getgenv().AutoRebirth = false
+                             break
+                         end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- [[ SECTION 3: MONEY COLLECTION ]] --
+local MoneySection = MainTab:Section({ Side = "Left" })
+MoneySection:Header({ Name = "Money Collection" })
+
+-- Money Logic Functions
+local function GetMyPlot()
+    for _, plot in ipairs(workspace.Plots:GetChildren()) do
+        local ownerValue = plot:FindFirstChild("Owner")
+        if ownerValue and tostring(ownerValue.Value) == LocalPlayer.Name then return plot end
+    end
+    return nil
+end
+
+local function GetPlotPosition(plotModel)
+    if plotModel:IsA("Model") then return plotModel:GetPivot().Position
+    elseif plotModel:FindFirstChild("Floor") then return plotModel.Floor.Position
+    else return plotModel:FindFirstChildWhichIsA("BasePart", true).Position end
+end
+
+local function CollectFromFolder(folder)
+    if not folder then return end
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        for _, part in ipairs(folder:GetChildren()) do
+            if not getgenv().AutoCollectMoney then break end
+            if part:IsA("BasePart") and part.Name:match("%d+") then
+                hrp.CFrame = part.CFrame
+                task.wait(0.15)
+            end
+        end
+    end
+end
+
+MoneySection:Slider({
+    Name = "Loop Delay (Seconds)",
+    Default = 5, Minimum = 1, Maximum = 60,
+    DisplayMethod = "Value", Precision = 0,
+    Callback = function(v) getgenv().CollectDelay = v end
+}, "CollectDelaySlider")
+
+MoneySection:Slider({
+    Name = "Max Distance (Studs)",
+    Default = 150, Minimum = 50, Maximum = 500,
+    DisplayMethod = "Value", Precision = 0,
+    Callback = function(v) getgenv().MaxDistance = v end
+}, "MaxDistanceSlider")
+
+MoneySection:Toggle({
+    Name = "💰 Auto Collect",
+    Default = false,
+    Callback = function(v)
+        getgenv().AutoCollectMoney = v
+        Window:Notify({ Title = "System", Description = (v and "Enabled" or "Disabled").." Auto Collect", Lifetime = 3 })
         
-        if DefaultMap then
-            -- 1. ลบ Walls (ที่ขอเพิ่ม)
-            if DefaultMap:FindFirstChild("Walls") then
-                DefaultMap.Walls:ClearAllChildren()
-            end
-
-            -- 2. ลบ RightWalls
-            if DefaultMap:FindFirstChild("RightWalls") then
-                DefaultMap.RightWalls:ClearAllChildren()
-            end
-
-            -- 3. ลบ Gaps (ต้องลบทีหลังสุดเพราะเราใช้ Gap5 อ้างอิงด้านบน)
-            if DefaultMap:FindFirstChild("Gaps") then
-                DefaultMap.Gaps:Destroy()
-            end
+        if v then
+            task.spawn(function()
+                while getgenv().AutoCollectMoney do
+                    task.wait(1)
+                    local player = Players.LocalPlayer
+                    local myPlot = GetMyPlot()
+                    
+                    if myPlot and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = player.Character.HumanoidRootPart
+                        local plotPos = GetPlotPosition(myPlot)
+                        local distance = (hrp.Position - plotPos).Magnitude
+                        
+                        if distance <= getgenv().MaxDistance then
+                            local originalPos = hrp.CFrame
+                            -- Floor 1
+                            if myPlot:FindFirstChild("CollectButtons") then CollectFromFolder(myPlot.CollectButtons) end
+                            -- Floor 2
+                            if getgenv().AutoCollectMoney and myPlot:FindFirstChild("SecondFloor") then
+                                local b = myPlot.SecondFloor:FindFirstChild("CollectButtons")
+                                if b then CollectFromFolder(b) end
+                            end
+                            -- Floor 3
+                            if getgenv().AutoCollectMoney and myPlot:FindFirstChild("ThirdFloor") then
+                                local b = myPlot.ThirdFloor:FindFirstChild("CollectButtons")
+                                if b then CollectFromFolder(b) end
+                            end
+                            -- Return
+                            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                player.Character.HumanoidRootPart.CFrame = originalPos
+                            end
+                            task.wait(getgenv().CollectDelay)
+                        else
+                            task.wait(2) -- Too far
+                        end
+                    end
+                end
+            end)
         end
+    end
+}, "AutoCollectSafeToggle")
 
-        -- 4. จัดการ Barriers (ทำให้ล่องหน + ทะลุได้)
-        local Barriers = workspace:FindFirstChild("Barriers")
-        if Barriers then
-            for _, v in pairs(Barriers:GetChildren()) do
-                if v:IsA("BasePart") then
-                    v.Transparency = 1      -- มองไม่เห็น
-                    v.CanCollide = false    -- เดินทะลุ
+
+-------------------------------------------------
+--// [RIGHT COLUMN] AUTO FARM
+-------------------------------------------------
+local FarmSection = MainTab:Section({ Side = "Right" })
+FarmSection:Header({ Name = "AutoFarm Brainrots" })
+
+local SelectedRarities = {}
+local AutoFarm = false
+local Farming = false
+local ReturnCFrame = CFrame.new(31.68, 3, -156.56)
+local RarityList = { "Basic", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Celestial", "Divine" }
+
+local function GetHRP()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char:WaitForChild("HumanoidRootPart")
+end
+
+local function SmartTeleport(cf)
+    local hrp = GetHRP()
+    if hrp then hrp.CFrame = cf; task.wait(0.25) end
+end
+
+local function PressPrompt(model)
+    for _, v in ipairs(model:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            v.HoldDuration = 0; fireproximityprompt(v); return true
+        end
+    end
+end
+
+-- Farm Loop Logic
+task.spawn(function()
+    while task.wait(0.25) do
+        if not AutoFarm or Farming then continue end
+        local foundTarget = false
+        for _, brainrot in ipairs(workspace.Brainrots:GetChildren()) do
+            if not AutoFarm then break end
+            local gui = brainrot:FindFirstChild("Gui", true)
+            local rarityLabel = gui and gui:FindFirstChild("Rarity", true)
+            local mesh = brainrot:FindFirstChild("Mesh")
+            local carried = mesh and mesh:FindFirstChild("CarryBrainrotWeld")
+
+            if rarityLabel and mesh and not carried and table.find(SelectedRarities, rarityLabel.Text) then
+                local part = brainrot:FindFirstChildWhichIsA("BasePart")
+                if part and part.Parent then
+                    Farming = true
+                    foundTarget = true
+                    SmartTeleport(part.CFrame * CFrame.new(0, -3, 0))
+                    
+                    if not brainrot or not brainrot.Parent or not part or not part.Parent then
+                        Farming = false; break
+                    end
+                    
+                    task.wait(0.1); PressPrompt(brainrot)
+                    
+                    local timeout = 0
+                    repeat task.wait(0.1); timeout = timeout + 0.1
+                    until (mesh:FindFirstChild("CarryBrainrotWeld")) or not AutoFarm or not brainrot.Parent or timeout > 2
+                    
+                    SmartTeleport(ReturnCFrame)
+                    Farming = false; break
                 end
             end
         end
+        if not foundTarget then Farming = false end
+    end
+end)
+
+FarmSection:Dropdown({
+    Name = "Select Rarity",
+    Multi = true, Required = false,
+    Options = RarityList, Default = {},
+    Callback = function(v)
+        SelectedRarities = {}
+        for rarity, enabled in pairs(v) do if enabled then table.insert(SelectedRarities, rarity) end end
     end
 })
 
-
---// =====================================================
---// MISC TAB (PLAYER)
---// =====================================================
-Tabs.Misc:AddSection("🧍 Player")
-
-PlayerSpeedSlider = Tabs.Misc:AddSlider("PlayerSpeed", {
-    Title = "🚀 Player Speed",
-    Description = "ปรับความเร็วการเดิน",
-    Default = InitialSpeed,
-    Min = 0,
-    Max = 1200,
-    Rounding = 1,
-    Callback = function(value)
-        LocalPlayer:SetAttribute("CurrentSpeed", value)
+FarmSection:Toggle({
+    Name = "AutoFarm",
+    Default = false,
+    Callback = function(v)
+        AutoFarm = v
+        Window:Notify({ Title = "System", Description = (v and "Enabled" or "Disabled").." AutoFarm", Lifetime = 3 })
     end
 })
 
-JumpUpgradeSlider = Tabs.Misc:AddSlider("JumpUpgrade", {
-    Title = "🦘 Jump Upgrade",
-    Description = "ปรับกระโดดสูง",
-    Default = InitialJump,
-    Min = 0,
-    Max = 1000,
-    Rounding = 1,
-    Callback = function(value)
-        LocalPlayer:SetAttribute("JumpUpgrade", value)
-    end
-})
+FarmSection:Paragraph({ Header = "Info", Body = "Select rarity then enable AutoFarm." })
 
-Tabs.Misc:AddButton({
-    Title = "🔄 Reset Player Stats",
-    Description = "รีเซ็ตความเร็วและการกระโดดกลับค่าเริ่มต้น",
-    Callback = function()
-        LocalPlayer:SetAttribute("CurrentSpeed", InitialSpeed)
-        LocalPlayer:SetAttribute("JumpUpgrade", InitialJump)
-
-        PlayerSpeedSlider:SetValue(InitialSpeed)
-        JumpUpgradeSlider:SetValue(InitialJump)
-
-        Fluent:Notify({
-            Title = "Reset Complete",
-            Content = "รีเซ็ตค่าผู้เล่นเรียบร้อยแล้ว",
-            Duration = 4
-        })
-    end
-})
-
---// =====================================================
---// SETTINGS TAB
---// =====================================================
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/EscapeTsunami")
-
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
-
---// =====================================================
---// STARTUP
---// =====================================================
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Loaded",
-    Content = "Escape Tsunami script loaded successfully",
-    Duration = 6
-})
-
-SaveManager:LoadAutoloadConfig()
+-------------------------------------------------
+--// INITIALIZATION
+-------------------------------------------------
+MacLib:SetFolder("JumpForBrainrots")
+MainTab:Select()
+MacLib:LoadAutoLoadConfig()
