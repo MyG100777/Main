@@ -436,3 +436,122 @@ TraitSection:Toggle({
 MacLib:SetFolder("JumpForBrainrots")
 MainTab:Select()
 MacLib:LoadAutoLoadConfig()
+
+--// Mobile / UI Toggle Button (RGB G-Button)
+task.spawn(function()
+    local UserInputService = game:GetService("UserInputService")
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    local RunService = game:GetService("RunService")
+    local CoreGui = game:GetService("CoreGui")
+    local Players = game:GetService("Players")
+
+    -- 1. ระบบ Cleanup: ตรวจสอบและลบ GUI เก่าทิ้งก่อน เพื่อไม่ให้ปุ่มซ้อนกัน
+    local GuiName = "Gzuss_ToggleUI_Unique"
+    local existingGui = CoreGui:FindFirstChild(GuiName) or Players.LocalPlayer.PlayerGui:FindFirstChild(GuiName)
+    if existingGui then
+        existingGui:Destroy()
+    end
+
+    -- สร้าง ScreenGui ใหม่
+    local Gui = Instance.new("ScreenGui")
+    Gui.Name = GuiName
+    Gui.ResetOnSpawn = false -- ตายแล้วปุ่มไม่หาย
+
+    -- พยายามยัดใส่ CoreGui (กันเผลอลบ) ถ้าไม่ได้ให้ลง PlayerGui
+    if pcall(function() Gui.Parent = CoreGui end) then
+    else
+        Gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    -- สร้างปุ่ม (TextButton)
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Name = "ToggleBtn"
+    ToggleBtn.Parent = Gui
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- พื้นหลังสีดำ
+    ToggleBtn.BackgroundTransparency = 0.2 -- โปร่งใสนิดหน่อยให้ดูหรู
+    ToggleBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
+    ToggleBtn.Size = UDim2.new(0, 50, 0, 50) -- ขนาดสี่เหลี่ยมจัตุรัส
+    ToggleBtn.Text = "G" -- ตัวอักษร G
+    ToggleBtn.TextSize = 35
+    ToggleBtn.Font = Enum.Font.FredokaOne -- ฟอนต์ตัวหนาๆ มนๆ
+    ToggleBtn.AutoButtonColor = false -- ปิดสีเทาเวลากด
+
+    -- ทำขอบมน (Rounded Square)
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0.3, 0) -- ความมนของขอบ
+    UICorner.Parent = ToggleBtn
+
+    -- ใส่เส้นขอบ (เพื่อให้ดูเรืองแสง)
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Parent = ToggleBtn
+    UIStroke.Thickness = 2
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- ขอบปุ่มเรืองแสง
+    
+    -- ใส่เส้นขอบตัวอักษร (เพื่อให้ตัว G เรืองแสง)
+    local TextStroke = Instance.new("UIStroke")
+    TextStroke.Parent = ToggleBtn
+    TextStroke.Thickness = 1
+    TextStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual -- ตัวหนังสือเรืองแสง
+
+    -- ระบบ Animation สีรุ้ง (RGB Loop)
+    task.spawn(function()
+        while ToggleBtn.Parent do -- ทำงานตลอดเท่าที่ปุ่มยังอยู่
+            local t = tick()
+            -- สูตรสีรุ้ง
+            local rainbowColor = Color3.fromHSV((t % 5) / 5, 1, 1) 
+            
+            ToggleBtn.TextColor3 = rainbowColor -- สีตัว G
+            UIStroke.Color = rainbowColor -- สีขอบปุ่ม
+            TextStroke.Color = rainbowColor -- สีขอบตัว G
+            
+            RunService.Heartbeat:Wait()
+        end
+    end)
+
+    -- ระบบลากปุ่ม (Drag Logic) - เหมือนเดิม
+    local dragging, dragInput, dragStart, startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    ToggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = ToggleBtn.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    ToggleBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    -- เมื่อกดปุ่ม -> สั่งพับจอ (จำลองกด Right Control)
+    ToggleBtn.MouseButton1Click:Connect(function()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+        task.wait()
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
+        
+        -- เพิ่มลูกเล่น: กดแล้วปุ่มย่อขยายเด้งดึ๋ง
+        local TS = game:GetService("TweenService")
+        TS:Create(ToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+        task.wait(0.1)
+        TS:Create(ToggleBtn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+    end)
+end)
