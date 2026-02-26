@@ -270,7 +270,7 @@ task.spawn(function()
         for _, brainrot in ipairs(Workspace.Brainrots:GetChildren()) do
             if not AutoFarm then break end
             
-            local gui = brainrot:FindFirstChild("Gui", true)
+            local gui = brainrot:FindFirstChild("BrainrotGui", true)
             local rarityLabel = gui and gui:FindFirstChild("Rarity", true)
             local variantLabel = gui and gui:FindFirstChild("Variant")
             local variantText = variantLabel and variantLabel.Text
