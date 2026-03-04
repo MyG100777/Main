@@ -1,11 +1,3 @@
---[[
-    --------------------------------------------------------------------
-    SCRIPT NAME: Auto Farm Wire + Auto Eat & Universal + Aimbot
-    AUTHOR: Gzuss (Plus Edition Upgrade)
-    FRAMEWORK: FluentPlus UI
-    --------------------------------------------------------------------
-]]
-
 local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -19,13 +11,14 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
+local Player = game.Players.LocalPlayer
 
 -- ==========================================================
 -- 🌟 FluentPlus Window Setup
 -- ==========================================================
 local Window = Fluent:CreateWindow({
     Title = "<gradient:#0072ff:#00c6ff>Thaiban City [BETA TEST]</gradient>",
-    SubTitle = "By Gzuss (Plus Edition)",
+    SubTitle = "By Gzus",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -48,6 +41,7 @@ local Tabs = {
 
 local MainSubTabs = {
     Criminal = Tabs.Main:AddSubTab("Criminal", "skull"),
+	Gitizen = Tabs.Main:AddSubTab("Gitizen", "user"),
     Police = Tabs.Main:AddSubTab("Police", "shield")
 }
 
@@ -363,6 +357,298 @@ ToggleFarm:OnChanged(function()
     end)
 end)
 
+MainSubTabs.Gitizen:AddSection("🧑‍💼 Job")
+
+-- Job Delivery
+local AutoDeliveryEnabled = false
+
+-- ฟังก์ชันช่วยกด ProximityPrompt
+local function firePrompt(prompt)
+    if prompt and fireproximityprompt then
+        local oldLOS = prompt.RequiresLineOfSight
+        prompt.RequiresLineOfSight = false
+        fireproximityprompt(prompt)
+        task.wait(0.1)
+        prompt.RequiresLineOfSight = oldLOS
+    end
+end
+
+-- ฟังก์ชันเช็คว่ามี Cargo (Tool)
+local function hasCargo()
+    local char = Player.Character
+    local backpack = Player:FindFirstChild("Backpack")
+    
+    if char then
+        for _, obj in pairs(char:GetChildren()) do
+            if obj:IsA("Tool") and string.find(string.lower(obj.Name), "cargo") then
+                return true
+            end
+        end
+    end
+    if backpack then
+        for _, obj in pairs(backpack:GetChildren()) do
+            if obj:IsA("Tool") and string.find(string.lower(obj.Name), "cargo") then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local AutoDeliveryToggle = MainSubTabs.Gitizen:AddToggle("AutoDelivery", {
+    Title = "Auto Delivery", 
+    Description = "ทำงาน ส่งของ เเบบอ้อโต้ 📦",
+    Default = false
+})
+
+AutoDeliveryToggle:OnChanged(function(Value)
+    AutoDeliveryEnabled = Value
+    
+    if not AutoDeliveryEnabled then
+        return
+    end
+    
+    if AutoDeliveryEnabled then
+        task.spawn(function()
+            while AutoDeliveryEnabled do
+                task.wait(0.5)
+                
+                local Character = Player.Character
+                if not Character or not Character:FindFirstChild("HumanoidRootPart") then continue end
+                
+                -- [ระบบล็อกตัวละครถูกนำออกแล้ว]
+                
+                local Head = Character:FindFirstChild("Head")
+                if not Head then continue end
+                
+                local RoleNameUI = Head:FindFirstChild("PLAYER_BOARD") 
+                    and Head.PLAYER_BOARD:FindFirstChild("Main") 
+                    and Head.PLAYER_BOARD.Main:FindFirstChild("RoleName")
+                
+                local JobInteractions = workspace:FindFirstChild("JobInteractions")
+                if not JobInteractions then continue end
+
+                local isDeliveryRole = RoleNameUI and string.find(RoleNameUI.Text, "พนักงานขนส่ง")
+
+                -- 1. ถ้ายืนยันว่ายังไม่ได้เป็น พนักงานขนส่ง
+                if not isDeliveryRole then
+                    -- ยกพิกัด Y ขึ้นนิดนึงกันจมดิน
+                    Character:PivotTo(CFrame.new(367.731598, 14.0, 145.925919, 0.642217755, -2.92585689e-08, 0.766522229, 6.75062353e-08, 1, -1.83884197e-08, -0.766522229, 6.35543955e-08, 0.642217755))
+                    task.wait(0.5)
+                    
+                    local JobPrompt = JobInteractions:FindFirstChild("NPCJobGiver") 
+                        and JobInteractions.NPCJobGiver:FindFirstChild("Delivery") 
+                        and JobInteractions.NPCJobGiver.Delivery:FindFirstChildOfClass("ProximityPrompt", true)
+                    
+                    if JobPrompt then
+                        firePrompt(JobPrompt)
+                        task.wait(0.2)
+                    end
+                end
+
+                -- 4. ถ้าเป็นพนักงานขนส่งแล้ว ลุยงาน
+                if isDeliveryRole then
+                    
+                    if hasCargo() then
+                        -- ==========================================
+                        -- มี Cargo -> หา NPC และกางเรดาร์
+                        -- ==========================================
+                        for i = 1, 5 do
+                            local NPCName = "NPC_" .. tostring(i)
+                            local TargetNPC = workspace:FindFirstChild(NPCName)
+                            
+                            if TargetNPC then
+                                local npcPosition = TargetNPC:GetPivot().Position
+                                local targetPrompt = nil
+                                local closestDistance = 20
+
+                                -- สแกนปุ่มล่องหนรอบๆ
+                                for _, obj in ipairs(workspace:GetDescendants()) do
+                                    if obj:IsA("ProximityPrompt") and obj.Parent and obj.Parent:IsA("BasePart") then
+                                        local distance = (obj.Parent.Position - npcPosition).Magnitude
+                                        if distance <= closestDistance then
+                                            closestDistance = distance
+                                            targetPrompt = obj
+                                        end
+                                    end
+                                end
+                                
+                                if targetPrompt then
+                                    -- วาร์ปไปที่ตัว NPC โดยตรง พร้อมบวกความสูง (Y) เพิ่ม 3 สตั๊ด
+                                    local warpLocation = TargetNPC:GetPivot() + Vector3.new(0, 3, 0)
+                                    Character:PivotTo(warpLocation)
+                                    
+                                    task.wait(0.3)
+                                    firePrompt(targetPrompt)
+                                    
+                                    Fluent:Notify({
+                                        Title = "✅ ส่งของเรียบร้อย",
+                                        Content = "ส่งของเรียบร้อย 📦 ",
+                                        Duration = 1.5
+                                    })
+                                    
+                                    task.wait(1.5) -- รอของหาย
+                                    break
+                                end
+                            end
+                        end
+                        
+                    else
+                        -- ==========================================
+                        -- ยังไม่มีของ -> ไปรับที่ RackTrigger หรือ StorePoints
+                        -- ==========================================
+                        local storePointTriggered = false
+                        
+                        local StorePoints = JobInteractions:FindFirstChild("Delivery") 
+                            and JobInteractions.Delivery:FindFirstChild("StorePoints")
+                        
+                        if StorePoints then
+                            local TriggerNames = {"Trigger", "Trigger1", "Trigger2", "Trigger3", "Trigger5"}
+                            for _, tName in ipairs(TriggerNames) do
+                                local Point = StorePoints:FindFirstChild(tName)
+                                local pointPrompt = Point and Point:FindFirstChildOfClass("ProximityPrompt", true)
+                                
+                                if pointPrompt then
+                                    Character:PivotTo(Point.CFrame + Vector3.new(0, 3, 0))
+                                    task.wait(0.5)
+                                    firePrompt(pointPrompt)
+                                    task.wait(0.5)
+                                    storePointTriggered = true
+                                    break
+                                end
+                            end
+                        end
+                        
+                        if not storePointTriggered then
+                            local RackTrigger = JobInteractions:FindFirstChild("Delivery") 
+                                and JobInteractions.Delivery:FindFirstChild("RackTrigger")
+                            
+                            local rackPrompt = RackTrigger and RackTrigger:FindFirstChildOfClass("ProximityPrompt", true)
+                            if rackPrompt then
+                                -- วาร์ปไปจุดปลอดภัย
+                                Character:PivotTo(CFrame.new(374.020203, 10.9980268, 123.130455, 0.997430623, 2.35509319e-08, -0.0716392249, -2.05191224e-08, 1, 4.30564562e-08, 0.0716392249, -4.14758539e-08, 0.997430623))
+                                task.wait(0.5)
+                                firePrompt(rackPrompt)
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Job Construction
+local AutoConstructionEnabled = false
+
+-- ฟังก์ชันช่วยกด ProximityPrompt
+local function firePrompt(prompt)
+    if prompt and fireproximityprompt then
+        local oldLOS = prompt.RequiresLineOfSight
+        prompt.RequiresLineOfSight = false
+        fireproximityprompt(prompt)
+        task.wait(0.1)
+        prompt.RequiresLineOfSight = oldLOS
+    end
+end
+
+-- สร้าง Toggle ในหน้า Main
+local AutoConstructionToggle =  MainSubTabs.Gitizen:AddToggle("AutoConstruction", {
+    Title = " Auto Construction", 
+	Description = "ทำงาน ก่อสร้าง เเบบอ้อโต้ 🏗️",
+    Default = false
+})
+
+AutoConstructionToggle:OnChanged(function(Value)
+    AutoConstructionEnabled = Value
+    
+    if AutoConstructionEnabled then
+        task.spawn(function()
+            while AutoConstructionEnabled do
+                task.wait(0.5)
+                
+                local Character = Player.Character
+                if not Character or not Character:FindFirstChild("HumanoidRootPart") then continue end
+                
+                -- เช็ค RoleName
+                local Head = Character:FindFirstChild("Head")
+                if not Head then continue end
+                
+                local RoleNameUI = Head:FindFirstChild("PLAYER_BOARD") 
+                    and Head.PLAYER_BOARD:FindFirstChild("Main") 
+                    and Head.PLAYER_BOARD.Main:FindFirstChild("RoleName")
+                
+                local isConstructionRole = RoleNameUI and RoleNameUI.Text == "คนงานก่อสร้าง"
+
+                -- 1 & 2. ถ้าโรลไม่ตรง ให้วาร์ปไปรับงาน
+                if not isConstructionRole then
+                    -- วาร์ปไปพิกัดรับงาน (ยกตัวขึ้นนิดนึงกันจมดิน)
+                    Character:PivotTo(CFrame.new(273.128357, 12.0, 132.989944, 0.0195177421, 2.90942133e-08, -0.999809504, -3.90014847e-08, 1, 2.83383912e-08, 0.999809504, 3.84409553e-08, 0.0195177421))
+                    task.wait(0.5)
+                    
+                    -- 3. กดปุ่มรับงาน
+                    local JobPrompt = workspace:FindFirstChild("JobInteractions")
+                        and workspace.JobInteractions:FindFirstChild("NPCJobGiver")
+                        and workspace.JobInteractions.NPCJobGiver:FindFirstChild("Construction")
+                        and workspace.JobInteractions.NPCJobGiver.Construction:FindFirstChild("ProximityPrompt")
+                    
+                    if JobPrompt then
+                        firePrompt(JobPrompt)
+                        task.wait(0.2)
+                    end
+                end
+
+                -- 4 & 5. เมื่อเป็นคนงานก่อสร้างแล้ว ให้หาโมเดล 1, 2, 3
+                if isConstructionRole then
+                    local targetModelNames = {"1", "2", "3"}
+                    local foundAnyTarget = false
+
+                    for _, mName in ipairs(targetModelNames) do
+                        -- ค้นหาโมเดลใน Workspace
+                        local targetModel = workspace:FindFirstChild(mName)
+                        
+                        if targetModel then
+                            foundAnyTarget = true
+                            -- สแกนหาปุ่มกดรอบๆ หรือในโมเดล (ใช้รัศมีเรดาร์ 20 สตั๊ด)
+                            local modelPos = targetModel:GetPivot().Position
+                            local targetPrompt = nil
+                            local closestDist = 20
+
+                            for _, obj in ipairs(workspace:GetDescendants()) do
+                                if obj:IsA("ProximityPrompt") and obj.Parent and obj.Parent:IsA("BasePart") then
+                                    local dist = (obj.Parent.Position - modelPos).Magnitude
+                                    if dist <= closestDist then
+                                        closestDist = dist
+                                        targetPrompt = obj
+                                    end
+                                end
+                            end
+
+                            if targetPrompt then
+                                -- วาร์ปไปหาโมเดล (บวกความสูง Y กันจมดิน)
+                                Character:PivotTo(targetModel:GetPivot() + Vector3.new(0, 1, 0))
+                                task.wait(0.2)
+                                firePrompt(targetPrompt)
+                                
+                                -- เช็คจนกว่าโมเดลจะหายไป
+                                repeat
+                                    task.wait(0.1)
+                                until not targetModel or not targetModel.Parent or not AutoConstructionEnabled
+                            end
+                        end
+                        if not AutoConstructionEnabled then break end
+                    end
+                    
+                    if not foundAnyTarget then
+                        -- กรณีไม่มีโมเดลโผล่มาเลย ให้ยืนรอที่จุดก่อสร้าง
+                        print("กำลังรอโมเดลงานก่อสร้างโผล่มา...")
+                    end
+                end
+            end
+        end)
+    end
+end)
 
 -- [ แทรกระบบเข้า SubTab: Police ]
 MainSubTabs.Police:AddSection("👮 Police ( Aimbot )")
@@ -1085,4 +1371,4 @@ SaveManager:BuildConfigSection(Tabs.Settings)
 
 Window:SelectTab(1)
 
-Fluent:Notify({ Title = "Script Loaded", Content = "FluentPlus Features Activated!", Duration = 5 })
+Fluent:Notify({ Title = "GzusX", Content = "Enjoy ครับผม!", Duration = 5 })
