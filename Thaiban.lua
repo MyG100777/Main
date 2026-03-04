@@ -1,32 +1,14 @@
 --[[
     --------------------------------------------------------------------
     SCRIPT NAME: Auto Farm Wire + Auto Eat & Universal + Aimbot
-    AUTHOR: Gzuss
-    FRAMEWORK: Fluent UI
+    AUTHOR: Gzuss (Plus Edition Upgrade)
+    FRAMEWORK: FluentPlus UI
     --------------------------------------------------------------------
 ]]
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-local Window = Fluent:CreateWindow({
-    Title = "เเมพอะไรไม่รู้ทำๆไปก่อน",
-    SubTitle = "By Gzuss",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
-    Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
-	Food = Window:AddTab({ Title = "Food", Icon = "apple" }),
-	Teleport = Window:AddTab({ Title = "Teleport", Icon = "activity" }),
-    Player = Window:AddTab({ Title = "Player", Icon = "user" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
 
 local Options = Fluent.Options
 local Players = game:GetService("Players")
@@ -38,6 +20,53 @@ local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
+-- ==========================================================
+-- 🌟 FluentPlus Window Setup
+-- ==========================================================
+local Window = Fluent:CreateWindow({
+    Title = "<gradient:#0072ff:#00c6ff>Thaiban City [BETA TEST]</gradient>",
+    SubTitle = "By Gzuss (Plus Edition)",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "AMOLED", 
+    MinimizeKey = Enum.KeyCode.F,
+    
+    UserInfo = true,
+    UserInfoTitle = LocalPlayer.DisplayName,
+    UserInfoSubtitle = "Enjoy ครับผม",
+})
+
+-- ใช้ Lucide Icons แบบใหม่
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Food = Window:AddTab({ Title = "Food", Icon = "pizza" }),
+    Teleport = Window:AddTab({ Title = "Teleport", Icon = "map-pin" }),
+    Player = Window:AddTab({ Title = "Player", Icon = "user" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local MainSubTabs = {
+    Criminal = Tabs.Main:AddSubTab("Criminal", "skull"),
+    Police = Tabs.Main:AddSubTab("Police", "shield")
+}
+
+local FoodSubTabs = {
+    Buy = Tabs.Food:AddSubTab("Buy", "shopping-cart"),
+    Eat = Tabs.Food:AddSubTab("Eat", "utensils")
+}
+
+local TeleportSubTabs = {
+    Npc = Tabs.Teleport:AddSubTab("Npc", "map-pin"),
+    Player = Tabs.Teleport:AddSubTab("Player", "users")
+}
+
+-- [แก้บัคแล้ว] เปลี่ยนจาก Tabs.Teleport เป็น Tabs.Player
+local PlayerSubTabs = {
+    Player = Tabs.Player:AddSubTab("Player", "user"),
+    Esp = Tabs.Player:AddSubTab("Esp", "eye")
+}
+
 --[[ 
     --------------------------------------------------------------------
     SECTION: VARIABLES & CONFIG (WIRE FARM & AIMBOT)
@@ -45,7 +74,7 @@ local Camera = Workspace.CurrentCamera
 ]]
 
 local WireCFrame = CFrame.new(787.51062, 9.09802723, 227.773956, 0.0442603081, 3.76006142e-08, 0.99902004, -6.2313525e-08, 1, -3.4876777e-08, -0.99902004, -6.07087998e-08, 0.0442603081)
-local SafeZoneCFrame = CFrame.new(362.557129, 371.35791, 618.62616, 0.998580813, -0.00436378922, 0.0530778803, 6.40599529e-09, 0.996637404, 0.0819382593, -0.0532569587, -0.0818219781, 0.995223045)
+local SafeZoneCFrame = CFrame.new(180.634125, -127.735748, 108.22982, -0.328742862, -4.1624503e-08, 0.944419444, 1.98933421e-08, 1, 5.09988389e-08, -0.944419444, 3.5553164e-08, -0.328742862)
 local CementCFrame = CFrame.new(-356.902191, 85.5697861, -344.235657, 0.997619927, 3.93320327e-08, -0.0689524263, -3.97723987e-08, 1, -5.01370145e-09, 0.0689524263, 7.74417241e-09, 0.997619927)
 local CementInteractPart = workspace.Robberies.Objects:GetChildren()[5].Interact.Interaction
 local InteractPart = workspace:WaitForChild("Robberies"):WaitForChild("Objects"):WaitForChild("Wire"):WaitForChild("Interact")
@@ -100,17 +129,9 @@ local BtnCorner = Instance.new("UICorner")
 BtnCorner.CornerRadius = UDim.new(0, 8)
 BtnCorner.Parent = ToggleBtn
 
--- ฟังก์ชันเมื่อกดปุ่มลอยหน้าจอ
 ToggleBtn.MouseButton1Click:Connect(function()
-    AimbotConfig.Enabled = not AimbotConfig.Enabled
-    if AimbotConfig.Enabled then
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        ToggleBtn.Text = "AIM: ON"
-        FOVStroke.Color = Color3.fromRGB(0, 255, 0)
-    else
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        ToggleBtn.Text = "AIM: OFF"
-        FOVStroke.Color = Color3.fromRGB(255, 50, 50)
+    if Options.AimbotMenuToggle then
+        Options.AimbotMenuToggle:SetValue(not AimbotConfig.Enabled)
     end
 end)
 
@@ -124,7 +145,6 @@ local function Micromove(char)
     if char and char:FindFirstChild("Humanoid") then
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if hrp then
-            -- ขยับไปข้างหน้านิดนึง แล้วถอยกลับ
             local startPos = hrp.Position
             char.Humanoid:MoveTo(startPos + Vector3.new(0, 0, 1))
             task.wait(0.1)
@@ -190,7 +210,6 @@ local function CreateAirRoom()
     createWall(Vector3.new(width, height, thickness), Vector3.new(0, 0, -width/2)) 
 end
 
--- Aimbot: หาคนใกล้เป้า
 local function GetClosestPlayerToCenter()
     local closestPlayer = nil
     local shortestDistance = math.huge
@@ -214,7 +233,6 @@ local function GetClosestPlayerToCenter()
     return closestPlayer
 end
 
--- Aimbot & FOV Loop
 RunService.RenderStepped:Connect(function()
     if AimbotConfig.ShowFOV then
         FOVFrame.Size = UDim2.new(0, AimbotConfig.FOV * 2, 0, AimbotConfig.FOV * 2)
@@ -238,12 +256,12 @@ end)
     --------------------------------------------------------------------
 ]]
 
-Tabs.Main:AddSection("⚠️ Criminal")
+-- [ แทรกระบบเข้า SubTab: Criminal ]
+MainSubTabs.Criminal:AddSection("⚠️ Criminal Options")
 
-local StatusLabel = Tabs.Main:AddParagraph({ Title = "Current Status", Content = "ปิดการใช้งาน" })
+local StatusLabel = MainSubTabs.Criminal:AddParagraph({ Title = "Current Status", Content = "ปิดการใช้งาน" })
 
--- เพิ่ม Dropdown ให้เลือกงาน
-local FarmTargetDropdown = Tabs.Main:AddDropdown("FarmTarget", {
+local FarmTargetDropdown = MainSubTabs.Criminal:AddDropdown("FarmTarget", {
     Title = "Farm Target",
     Description = "เลือกว่าจะฟาร์มอะไร 🚷",
     Values = {"ตัดสายไฟ", "จกปูน"},
@@ -251,15 +269,12 @@ local FarmTargetDropdown = Tabs.Main:AddDropdown("FarmTarget", {
     Default = "ตัดสายไฟ"
 })
 
-local ToggleFarm = Tabs.Main:AddToggle("AutoFarm", {
+local ToggleFarm = MainSubTabs.Criminal:AddToggle("AutoFarm", {
     Title = "Auto Farm", 
     Description = "ฟาร์มงานผิดกฎหมายแบบออโต้ ปล่อย AFK ได้ชิลๆ 💸",
     Default = false 
 })
 
--- ==========================================
--- 3. ระบบทำงาน (Loop)
--- ==========================================
 ToggleFarm:OnChanged(function()
     if Options.AutoFarm.Value then
         CreateAirRoom()
@@ -269,9 +284,6 @@ ToggleFarm:OnChanged(function()
         while Options.AutoFarm.Value do
             pcall(function()
                 if CheckWanted() then
-                    -- ===============================
-                    -- ระบบหนีตำรวจ (เหมือนเดิม)
-                    -- ===============================
                     StatusLabel:SetDesc("Status: ตำรวจกำลังมา! 🚨 กำลังหนี...")
                     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
                     LockCharacter(false)
@@ -293,19 +305,15 @@ ToggleFarm:OnChanged(function()
                     StatusLabel:SetDesc("Status: ทางสะดวก! ✅ กำลังกลับไปทำงาน...")
                     task.wait(1)
                 else
-                    -- ===============================
-                    -- ระบบทำงาน (เช็คว่าเลือกอะไรไว้)
-                    -- ===============================
                     local selectedJob = Options.FarmTarget.Value
                     local targetCFrame = nil
                     local interactPart = nil
                     local jobName = ""
                     local actionName = ""
                     
-                    -- กำหนดค่าตามงานที่เลือก
                     if selectedJob == "ตัดสายไฟ" then
                         targetCFrame = WireCFrame
-                        interactPart = InteractPart -- ใช้ตัวแปรเก่าของคุณ
+                        interactPart = InteractPart 
                         jobName = "จุดตัดสายไฟ"
                         actionName = "ตัดสายไฟ"
                     elseif selectedJob == "จกปูน" then
@@ -319,7 +327,6 @@ ToggleFarm:OnChanged(function()
                         StatusLabel:SetDesc("Status: กำลังไป " .. jobName .. "... 📍")
                         LockCharacter(false)
                         
-                        -- วาร์ปไปจุดเป้าหมาย
                         TeleportTo(targetCFrame)
                         task.wait(0.1)
                         Micromove(LocalPlayer.Character)
@@ -328,10 +335,8 @@ ToggleFarm:OnChanged(function()
                         StatusLabel:SetDesc("Status: กำลัง " .. actionName .. "... ⚡ (ล็อคตัว)")
                         LockCharacter(true)
                         
-                        -- กดปุ่ม E ค้างไว้ (Prompt 10 วิ)
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
                         
-                        -- Loop รอเวลา 10 วิ (21 * 0.5 = 10.5 วิ เผื่อเวลาไว้หน่อย)
                         for i = 1, 21 do 
                             if not Options.AutoFarm.Value then break end
                             if CheckWanted() then 
@@ -341,7 +346,6 @@ ToggleFarm:OnChanged(function()
                             task.wait(0.5)
                         end
                         
-                        -- ปล่อยปุ่ม E
                         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
                         LockCharacter(false)
                         task.wait(0.5)
@@ -353,20 +357,19 @@ ToggleFarm:OnChanged(function()
             end)
             task.wait(0.5)
         end
-        -- จบการทำงาน (ปิด Toggle)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
         LockCharacter(false)
         StatusLabel:SetDesc("Status: Idle")
     end)
 end)
 
-Tabs.Main:AddSection("🧍 Gitizen")
 
-Tabs.Main:AddSection("👮 Police ( Aimbot )")
+-- [ แทรกระบบเข้า SubTab: Police ]
+MainSubTabs.Police:AddSection("👮 Police ( Aimbot )")
 
-local AimbotToggle = Tabs.Main:AddToggle("AimbotMenuToggle", {
+local AimbotToggle = MainSubTabs.Police:AddToggle("AimbotMenuToggle", {
     Title = "Aimbot",
-	Description = "เอาไว้เปิดปิด ล็อก 🎯",
+    Description = "เอาไว้เปิดปิด ล็อก 🎯",
     Default = false 
 })
 
@@ -383,9 +386,9 @@ AimbotToggle:OnChanged(function(Value)
     end
 end)
 
-Tabs.Main:AddKeybind("AimbotKey", {
+MainSubTabs.Police:AddKeybind("AimbotKey", {
     Title = "PC Hotkey",
-	Description = "ตั้งค่าปุ่มคีย์ลัดสำหรับคนเล่นในคอม ⌨️",
+    Description = "ตั้งค่าปุ่มคีย์ลัดสำหรับคนเล่นในคอม ⌨️",
     Mode = "Toggle",
     Default = "",
     Callback = function(Value)
@@ -393,9 +396,9 @@ Tabs.Main:AddKeybind("AimbotKey", {
     end
 })
 
-Tabs.Main:AddSlider("FOVSize", {
+MainSubTabs.Police:AddSlider("FOVSize", {
     Title = "FOV Radius",
-	Description = "ปรับขนาดเป้าได้เท่าที่ต้องการ",
+    Description = "ปรับขนาดเป้าได้เท่าที่ต้องการ",
     Default = 150, 
     Min = 50,
     Max = 500,
@@ -403,17 +406,17 @@ Tabs.Main:AddSlider("FOVSize", {
     Callback = function(Value) AimbotConfig.FOV = Value end
 })
 
-Tabs.Main:AddToggle("ShowFOV", {
+MainSubTabs.Police:AddToggle("ShowFOV", {
     Title = "Show FOV Circle",
-	Description = "เเสดงขอบเขตล็อกเป้า FOV", 
+    Description = "เเสดงขอบเขตล็อกเป้า FOV", 
     Default = false 
 }):OnChanged(function(Value)
     AimbotConfig.ShowFOV = Value
 end)
 
-Tabs.Main:AddToggle("ShowMobileBtn", {
+MainSubTabs.Police:AddToggle("ShowMobileBtn", {
     Title = "Show Floating Button", 
-	Description = "เเสดงปุ่มลอย สำหรับคนที่เล่นในมือถือ 📱",
+    Description = "เเสดงปุ่มลอย สำหรับคนที่เล่นในมือถือ 📱",
     Default = false 
 }):OnChanged(function(Value)
     ToggleBtn.Visible = Value
@@ -422,7 +425,7 @@ end)
 
 --[[ 
     --------------------------------------------------------------------
-    SECTION: 2. PLAYER TAB (FOOD & EAT & UNIVERSAL)
+    SECTION: 2. FOOD TAB
     --------------------------------------------------------------------
 ]]
 
@@ -436,10 +439,9 @@ local ShopPayloads = {
     ["น้ำเขียวโซดา"] = "\224\184\153\224\185\141\224\185\137\224\184\178\224\185\128\224\184\130\224\184\181\224\184\162\224\184\167\224\185\130\224\184\139\224\184\148\224\184\178"
 }
 
--- >> อาหาร (Food) <<
-Tabs.Food:AddSection("🍔 Buy Food")
+FoodSubTabs.Buy:AddSection("🍔 Buy Food")
 
-local BuyDropdown = Tabs.Food:AddDropdown("BuyFoodList", {
+local BuyDropdown = FoodSubTabs.Buy:AddDropdown("BuyFoodList", {
     Title = "เลือกอาหารที่จะซื้อ",
     Description = "สามารถเลือกได้หลายอัน",
     Values = {"หมูปิ้ง", "ข้าวจี่", "ข้าวเหนียว", "น้ำมะพร้าว", "โค้ก", "น้ำแดงโซดา", "น้ำเขียวโซดา"},
@@ -447,9 +449,9 @@ local BuyDropdown = Tabs.Food:AddDropdown("BuyFoodList", {
     Default = {}
 })
 
-Tabs.Food:AddButton({
+FoodSubTabs.Buy:AddButton({
     Title = "Buy",
-	Description = "ซื้อของที่เลือก 🛒",
+    Description = "ซื้อของที่เลือก 🛒",
     Callback = function()
         local selected = Options.BuyFoodList.Value
         if not selected then return end
@@ -466,45 +468,45 @@ Tabs.Food:AddButton({
     end
 })
 
--- >> กินออโต้ (Auto Eat) <<
-Tabs.Food:AddSection("🍽️ Auto Eat")
+FoodSubTabs.Eat:AddSection("🍽️ Auto Eat")
 
-local EatStatus = Tabs.Food:AddParagraph({ Title = "Status", Content = "หิว: --% | น้ำ: --%" })
+local EatStatus = FoodSubTabs.Eat:AddParagraph({ Title = "Status", Content = "หิว: --% | น้ำ: --%" })
 
-local EatFoodDrop = Tabs.Food:AddDropdown("AutoEatFood", {
+local EatFoodDrop = FoodSubTabs.Eat:AddDropdown("AutoEatFood", {
     Title = "เลือกอาหาร (Food)",
     Values = {"หมูปิ้ง", "ข้าวจี่", "ข้าวเหนียว"},
     Multi = false,
     Default = "หมูปิ้ง"
 })
 
-local EatWaterDrop = Tabs.Food:AddDropdown("AutoEatWater", {
+local EatWaterDrop = FoodSubTabs.Eat:AddDropdown("AutoEatWater", {
     Title = "เลือกน้ำ (Water)",
     Values = {"น้ำมะพร้าว", "โค้ก", "น้ำแดงโซดา", "น้ำเขียวโซดา"},
     Multi = false,
     Default = "โค้ก"
 })
 
-local FoodLimit = Tabs.Food:AddInput("FoodPercent", {
+local FoodLimit = FoodSubTabs.Eat:AddInput("FoodPercent", {
     Title = "กินเมื่อหิวน้อยกว่า (%)",
     Default = "30",
     Numeric = true,
     Finished = false
 })
 
-local WaterLimit = Tabs.Food:AddInput("WaterPercent", {
+local WaterLimit = FoodSubTabs.Eat:AddInput("WaterPercent", {
     Title = "ดื่มเมื่อน้ำน้อยกว่า (%)",
     Default = "30",
     Numeric = true,
     Finished = false
 })
 
-local ToggleEat = Tabs.Food:AddToggle("AutoEatToggle", { 
-	Title = "Auto Eat", 
-	Description = "กินอาหารอ้อโต้ 🍽️",
-	Default = false })
+local ToggleEat = FoodSubTabs.Eat:AddToggle("AutoEatToggle", { 
+    Title = "Auto Eat", 
+    Description = "กินอาหารออโต้ 🍽️",
+    Default = false 
+})
 
-local ToggleAutoBuy = Tabs.Food:AddToggle("AutoBuyMissing", { 
+local ToggleAutoBuy = FoodSubTabs.Eat:AddToggle("AutoBuyMissing", { 
     Title = "Auto Buy", 
     Description = "ถ้าถึงเวลากินแต่ของในตัวไม่มี มันจะกดซื้อให้ 1 ชิ้นแล้วกิน 🛒",
     Default = false 
@@ -528,12 +530,45 @@ local function GetHealthPercent(statType)
     return percent
 end
 
-local function HasItem(itemName)
+-- [อัปเกรด V2] ดักจับชื่อไอเทมแบบยืดหยุ่นด้วย Keyword
+local ToolKeywords = {
+    ["หมูปิ้ง"] = {"หมูปิ้ง", "Pork"},
+    ["ข้าวจี่"] = {"ข้าวจี่"},
+    ["ข้าวเหนียว"] = {"ข้าวเหนียว", "Sticky"},
+    ["น้ำมะพร้าว"] = {"น้ำมะพร้าว", "มะพร้าว", "Coconut"},
+    ["โค้ก"] = {"โค้ก", "Coke", "Cola"},
+    ["น้ำแดงโซดา"] = {"น้ำแดงโซดา", "น้ำแดง", "Red"},
+    ["น้ำเขียวโซดา"] = {"น้ำเขียวโซดา", "น้ำเขียว", "Green"}
+}
+
+local function GetToolByName(itemName)
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if backpack and backpack:FindFirstChild(itemName) then return true end
-    if char and char:FindFirstChild(itemName) then return true end
-    return false
+    
+    -- ดึงรหัสชื่อแปลกๆ จาก ShopPayloads ที่เราตั้งไว้ข้างบนมาใช้ค้นหา
+    local encodedName = ShopPayloads[itemName]
+    
+    local function searchIn(folder)
+        if not folder then return nil end
+        
+        -- 1. ค้นหาจากรหัสภาษาต่างดาว (แม่นสุดๆ)
+        if encodedName and folder:FindFirstChild(encodedName) then
+            return folder:FindFirstChild(encodedName)
+        end
+        
+        -- 2. ค้นหาจากชื่อภาษาไทยปกติ (เผื่อเกมมันอัปเดตแก้บัคชื่อ)
+        if folder:FindFirstChild(itemName) then
+            return folder:FindFirstChild(itemName)
+        end
+        
+        return nil
+    end
+    
+    return searchIn(char) or searchIn(backpack)
+end
+
+local function HasItem(itemName)
+    return GetToolByName(itemName) ~= nil
 end
 
 local function BuySingleItem(itemName)
@@ -545,17 +580,20 @@ local function BuySingleItem(itemName)
     end
 end
 
+-- หยิบมากินให้ชัวร์ขึ้น
 local function EquipAndEat(itemName)
     local char = LocalPlayer.Character
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if not char or not backpack then return end
+    if not char then return end
     
-    local tool = backpack:FindFirstChild(itemName) or char:FindFirstChild(itemName)
+    local tool = GetToolByName(itemName)
     if tool and tool:IsA("Tool") then
-        char.Humanoid:EquipTool(tool)
-        task.wait(0.2)
-        tool:Activate()
-        task.wait(1) 
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:EquipTool(tool)
+            task.wait(0.3) 
+            tool:Activate() 
+            task.wait(1.5) 
+        end
     end
 end
 
@@ -574,20 +612,34 @@ ToggleEat:OnChanged(function()
                 
                 EatStatus:SetDesc("🍔 หิว: " .. currentFood .. "% | 💧 น้ำ: " .. currentWater .. "%")
                 
+                -- ระบบกินอาหาร
                 if currentFood <= foodTarget then
                     if not HasItem(foodName) and Options.AutoBuyMissing.Value then
                         BuySingleItem(foodName)
-                        task.wait(0.5) 
+                        local t = 0
+                        while not HasItem(foodName) and t < 3 do
+                            task.wait(0.2)
+                            t = t + 0.2
+                        end
                     end
-                    EquipAndEat(foodName)
+                    if HasItem(foodName) then
+                        EquipAndEat(foodName)
+                    end
                 end
                 
+                -- ระบบดื่มน้ำ
                 if currentWater <= waterTarget then
                     if not HasItem(waterName) and Options.AutoBuyMissing.Value then
                         BuySingleItem(waterName)
-                        task.wait(0.5) 
+                        local t = 0
+                        while not HasItem(waterName) and t < 3 do
+                            task.wait(0.2)
+                            t = t + 0.2
+                        end
                     end
-                    EquipAndEat(waterName)
+                    if HasItem(waterName) then
+                        EquipAndEat(waterName)
+                    end
                 end
             end)
             task.wait(2) 
@@ -596,7 +648,12 @@ ToggleEat:OnChanged(function()
     end)
 end)
 
--- Tab Teleport
+--[[ 
+    --------------------------------------------------------------------
+    SECTION: 3. TELEPORT TAB
+    --------------------------------------------------------------------
+]]
+
 local NpcLocations = {
     ["ตัดกล้วย"] = CFrame.new(166.670654, 9.60753155, 238.960678, -1, 0, 0, 0, 1, 0, 0, 0, -1),
     ["ก่อสร้าง"] = CFrame.new(275.152039, 9.7319231, 132.781982, 0, -2.91038305e-11, 1.00000012, 0.000488311052, 0.999999881, -2.91038305e-11, -0.99999994, 0.000488311052, 0),
@@ -606,9 +663,9 @@ local NpcLocations = {
     ["พนักงานเซเว่น"] = CFrame.new(193.805405, 10.1315899, 108.863876, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 }
 
-Tabs.Teleport:AddSection("📍 NPC Teleport")
+TeleportSubTabs.Npc:AddSection("📍 NPC Teleport")
 
-local NpcDropdown = Tabs.Teleport:AddDropdown("SelectNpc", {
+local NpcDropdown = TeleportSubTabs.Npc:AddDropdown("SelectNpc", {
     Title = "Select NPC",
     Description = "เลือกตัวละคร NPC ที่ต้องการวาร์ปไปหา",
     Values = {"ตัดกล้วย", "ก่อสร้าง", "ขนส่ง", "พระ", "ตำรวจ", "พนักงานเซเว่น"},
@@ -616,7 +673,7 @@ local NpcDropdown = Tabs.Teleport:AddDropdown("SelectNpc", {
     Default = "ตัดกล้วย"
 })
 
-Tabs.Teleport:AddButton({
+TeleportSubTabs.Npc:AddButton({
     Title = "Teleport to NPC",
     Description = "กดยืนยันเพื่อวาร์ปไปยังตำแหน่ง NPC 🧍",
     Callback = function()
@@ -627,10 +684,8 @@ Tabs.Teleport:AddButton({
     end
 })
 
--- >> ซีเล็คชั่น 2: Player <<
-Tabs.Teleport:AddSection("👤 Player Teleport")
+TeleportSubTabs.Player:AddSection("👤 Player Teleport")
 
--- ฟังก์ชันดึงชื่อผู้เล่นทั้งหมดในแมพ (ไม่รวมตัวเอง)
 local function GetPlayerList()
     local list = {}
     for _, plr in pairs(Players:GetPlayers()) do
@@ -641,7 +696,7 @@ local function GetPlayerList()
     return list
 end
 
-local PlayerDropdown = Tabs.Teleport:AddDropdown("SelectPlayer", {
+local PlayerDropdown = TeleportSubTabs.Player:AddDropdown("SelectPlayer", {
     Title = "Select Player",
     Description = "เลือกชื่อผู้เล่นเป้าหมายในเซิร์ฟเวอร์",
     Values = GetPlayerList(),
@@ -649,7 +704,7 @@ local PlayerDropdown = Tabs.Teleport:AddDropdown("SelectPlayer", {
     Default = ""
 })
 
-Tabs.Teleport:AddButton({
+TeleportSubTabs.Player:AddButton({
     Title = "Refresh Player List",
     Description = "อัปเดตรายชื่อผู้เล่นล่าสุดในเซิร์ฟเวอร์",
     Callback = function()
@@ -658,7 +713,7 @@ Tabs.Teleport:AddButton({
     end
 })
 
-Tabs.Teleport:AddButton({
+TeleportSubTabs.Player:AddButton({
     Title = "Teleport to Player",
     Description = "วาร์ปไปด้านหลังของผู้เล่นที่เลือก 👥",
     Callback = function()
@@ -666,7 +721,6 @@ Tabs.Teleport:AddButton({
         if selectedPlayerName and selectedPlayerName ~= "" then
             local targetPlayer = Players:FindFirstChild(selectedPlayerName)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                -- วาร์ปไปด้านหลังเป้าหมายนิดนึง จะได้ไม่สิงกัน
                 local targetCFrame = targetPlayer.Character.HumanoidRootPart.CFrame
                 TeleportTo(targetCFrame * CFrame.new(0, 0, 3))
             else
@@ -678,11 +732,17 @@ Tabs.Teleport:AddButton({
     end
 })
 
--- >> ผู้เล่น (Universal) <<
-Tabs.Player:AddSection("🏃‍♂️ Universal")
+--[[ 
+    --------------------------------------------------------------------
+    SECTION: 4. PLAYER TAB (UNIVERSAL & ESP)
+    --------------------------------------------------------------------
+]]
 
-Tabs.Player:AddSlider("WalkSpeed", {
-    Title = "ความเร็วเดิน (WalkSpeed)",
+PlayerSubTabs.Player:AddSection("🏃‍♂️ Universal")
+
+PlayerSubTabs.Player:AddSlider("WalkSpeed", {
+    Title = "Walk Speed",
+    Description = "ปรับความเร็วในการเดินของตัวละคร",
     Default = 16,
     Min = 16,
     Max = 200,
@@ -694,8 +754,9 @@ Tabs.Player:AddSlider("WalkSpeed", {
     end
 })
 
-Tabs.Player:AddSlider("JumpPower", {
-    Title = "กระโดดสูง (JumpPower)",
+PlayerSubTabs.Player:AddSlider("JumpPower", {
+    Title = "Jump Power",
+    Description = "ปรับความสูงในการกระโดดของตัวละคร",
     Default = 50,
     Min = 50,
     Max = 300,
@@ -708,31 +769,159 @@ Tabs.Player:AddSlider("JumpPower", {
     end
 })
 
-local InfJump = Tabs.Player:AddToggle("InfJump", { Title = "กระโดดไม่จำกัด (Infinite Jump)", Default = false })
+local InfJump = PlayerSubTabs.Player:AddToggle("InfJump", { 
+    Title = "Infinite Jump 🦘", 
+    Description = "กระโดดบนอากาศได้เรื่อยๆ ไม่มีจำกัด",
+    Default = false 
+})
 UserInputService.JumpRequest:Connect(function()
     if Options.InfJump.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
 
-Tabs.Player:AddSection("👁️ ESP")
+-- ==========================================
+-- 🚀 ระบบ Noclip (ทะลุกำแพง)
+-- ==========================================
+local NoclipToggle = PlayerSubTabs.Player:AddToggle("Noclip", { 
+    Title = "Noclip 👻", 
+    Description = "เดินทะลุกำแพง บ้าน และสิ่งกีดขวางทั้งหมด",
+    Default = false 
+})
+RunService.Stepped:Connect(function()
+    if Options.Noclip and Options.Noclip.Value then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
 
--- ตั้งค่าทีมและสี
+-- ==========================================
+-- ✈️ ระบบ Fly (บิน)
+-- ==========================================
+local flyBodyVelocity, flyBodyGyro
+local FlyToggle = PlayerSubTabs.Player:AddToggle("FlyToggle", { 
+    Title = "Fly Mode ✈️", 
+    Description = "เปิดโหมดบิน",
+    Default = false 
+})
+local FlySpeed = PlayerSubTabs.Player:AddSlider("FlySpeed", { 
+    Title = "Fly Speed 💨", 
+    Description = "ปรับความเร็วในการบิน",
+    Default = 50, Min = 10, Max = 300, Rounding = 0 
+})
+
+FlyToggle:OnChanged(function(Value)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    if Value then
+        flyBodyVelocity = Instance.new("BodyVelocity")
+        flyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flyBodyVelocity.Velocity = Vector3.zero
+        flyBodyVelocity.Parent = hrp
+
+        flyBodyGyro = Instance.new("BodyGyro")
+        flyBodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        flyBodyGyro.P = 10000
+        flyBodyGyro.CFrame = hrp.CFrame
+        flyBodyGyro.Parent = hrp
+    else
+        if flyBodyVelocity then flyBodyVelocity:Destroy() end
+        if flyBodyGyro then flyBodyGyro:Destroy() end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if Options.FlyToggle and Options.FlyToggle.Value and flyBodyVelocity and flyBodyGyro and LocalPlayer.Character then
+        local char = LocalPlayer.Character
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local cam = workspace.CurrentCamera
+        local speed = Options.FlySpeed.Value
+        local direction = Vector3.zero
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction = direction + cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction = direction - cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then direction = direction - cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then direction = direction + cam.CFrame.RightVector end
+
+        flyBodyGyro.CFrame = cam.CFrame
+        flyBodyVelocity.Velocity = direction.Magnitude > 0 and (direction.Unit * speed) or Vector3.zero
+    end
+end)
+
+-- ==========================================
+-- 📷 ปรับมุมกล้องกว้าง (FOV)
+-- ==========================================
+PlayerSubTabs.Player:AddSlider("CameraFOV", {
+    Title = "Camera FOV 📷",
+    Description = "ปรับระดับความกว้างของมุมกล้อง",
+    Default = 70,
+    Min = 70,
+    Max = 120,
+    Rounding = 0,
+    Callback = function(Value)
+        workspace.CurrentCamera.FieldOfView = Value
+    end
+})
+
+-- ==========================================
+-- 💡 ระบบล้างแมพ / FPS Boost
+-- ==========================================
+PlayerSubTabs.Player:AddSection("⚡ Optimization")
+
+PlayerSubTabs.Player:AddButton({
+    Title = "Fullbright ☀️",
+    Description = "ลบเงาและทำให้ในที่มืดหรือตอนกลางคืนสว่างจ้า",
+    Callback = function()
+        game:GetService("Lighting").Brightness = 2
+        game:GetService("Lighting").ClockTime = 14
+        game:GetService("Lighting").FogEnd = 100000
+        game:GetService("Lighting").GlobalShadows = false
+        game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        Fluent:Notify({ Title = "Success", Content = "เปิดโหมดสว่างเรียบร้อยแล้ว!", Duration = 2 })
+    end
+})
+
+PlayerSubTabs.Player:AddButton({
+    Title = "FPS Boost 🚀",
+    Description = "ลบพื้นผิว Texture ออกเพื่อลดอาการแลค (กดแล้วจะคืนค่าไม่ได้จนกว่าจะออกเกมเข้าใหม่)",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Texture") or v:IsA("Decal") then
+                v:Destroy()
+            elseif v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
+                v.Material = Enum.Material.SmoothPlastic
+            end
+        end
+        game:GetService("Lighting").GlobalShadows = false
+        Fluent:Notify({ Title = "Boosted", Content = "ลบพื้นผิวเพื่อเพิ่ม FPS แล้ว!", Duration = 3 })
+    end
+})
+
+PlayerSubTabs.Esp:AddSection("👁️ ESP")
+
 if _G.ClearOldESP then
     _G.ClearOldESP()
 end
 
-local ESP_Cache = {} -- ตารางสำหรับจำค่า ESP จะได้ไม่กระพริบ
+local ESP_Cache = {} 
 local EspConnection = nil
 
--- ฟังก์ชันเคลียร์ ESP รายบุคคล
 local function RemoveESP(plr)
     if ESP_Cache[plr] then
         if ESP_Cache[plr].Highlight then ESP_Cache[plr].Highlight:Destroy() end
         if ESP_Cache[plr].NameTag then ESP_Cache[plr].NameTag:Destroy() end
         ESP_Cache[plr] = nil
     end
-    -- ดักจับเผื่อมีของเก่าหลงเหลืออยู่ในตัวละคร
     if plr.Character then
         local oldH = plr.Character:FindFirstChild("ESPHighlight")
         local oldN = plr.Character:FindFirstChild("ESPNameTag")
@@ -741,7 +930,6 @@ local function RemoveESP(plr)
     end
 end
 
--- ฟังก์ชันสำหรับล้างทุกอย่าง (ใช้ตอนปิด Toggle หรือตอนรันสคริปต์ใหม่)
 _G.ClearOldESP = function()
     if EspConnection then
         EspConnection:Disconnect()
@@ -752,21 +940,18 @@ _G.ClearOldESP = function()
     end
 end
 
--- ==========================================
--- 2. การตั้งค่า UI
--- ==========================================
 local EspSettings = {
-    ["โจร"] = { TeamName = "Criminal", Color = Color3.fromRGB(255, 0, 0) }, -- แดง
-    ["ตำรวจ"] = { TeamName = "ตำรวจ", Color = Color3.fromRGB(0, 0, 255) }, -- น้ำเงิน
-    ["พนักงานขนส่ง"] = { TeamName = "พนักงานขนส่ง", Color = Color3.fromRGB(255, 128, 0) }, -- ส้ม
-    ["คนงานก่อสร้าง"] = { TeamName = "คนงานก่อสร้าง", Color = Color3.fromRGB(128, 128, 128) }, -- เทา
-    ["คนตัดกล้วย"] = { TeamName = "คนตัดกล้วย", Color = Color3.fromRGB(255, 255, 0) }, -- เหลือง
-    ["พนักงานเซเว่น"] = { TeamName = "พนักงานเซเว่น", Color = Color3.fromRGB(0, 255, 255) }, -- ฟ้าสว่าง
-    ["ประชาชน"] = { TeamName = "Citizen", Color = Color3.fromRGB(0, 255, 0) }, -- เขียว
-    ["นักโทษ"] = { TeamName = "Prisoner", Color = Color3.fromRGB(128, 0, 128) } -- ม่วง
+    ["โจร"] = { TeamName = "Criminal", Color = Color3.fromRGB(255, 0, 0) }, 
+    ["ตำรวจ"] = { TeamName = "ตำรวจ", Color = Color3.fromRGB(0, 0, 255) }, 
+    ["พนักงานขนส่ง"] = { TeamName = "พนักงานขนส่ง", Color = Color3.fromRGB(255, 128, 0) }, 
+    ["คนงานก่อสร้าง"] = { TeamName = "คนงานก่อสร้าง", Color = Color3.fromRGB(128, 128, 128) }, 
+    ["คนตัดกล้วย"] = { TeamName = "คนตัดกล้วย", Color = Color3.fromRGB(255, 255, 0) }, 
+    ["พนักงานเซเว่น"] = { TeamName = "พนักงานเซเว่น", Color = Color3.fromRGB(0, 255, 255) }, 
+    ["ประชาชน"] = { TeamName = "Citizen", Color = Color3.fromRGB(0, 255, 0) }, 
+    ["นักโทษ"] = { TeamName = "Prisoner", Color = Color3.fromRGB(128, 0, 128) } 
 }
 
-local EspDropdown = Tabs.Player:AddDropdown("ESPTargets", {
+local EspDropdown = PlayerSubTabs.Esp:AddDropdown("ESPTargets", {
     Title = "Select Teams",
     Description = "สามารถเลือกได้หลายอันพร้อมกัน 👫",
     Values = {"โจร", "ตำรวจ", "พนักงานขนส่ง", "คนงานก่อสร้าง", "คนตัดกล้วย", "พนักงานเซเว่น", "ประชาชน", "นักโทษ"},
@@ -774,15 +959,12 @@ local EspDropdown = Tabs.Player:AddDropdown("ESPTargets", {
     Default = {}
 })
 
-local ToggleESP = Tabs.Player:AddToggle("ESPToggle", { 
+local ToggleESP = PlayerSubTabs.Esp:AddToggle("ESPToggle", { 
     Title = "ESP ", 
     Description = "เปิดมองทะลุ 👁️",
     Default = false 
 })
 
--- ==========================================
--- 3. ระบบอัปเดต ESP (ไม่กระพริบ & สีไม่ตีกัน)
--- ==========================================
 local function UpdateESP()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr == LocalPlayer then continue end
@@ -791,7 +973,6 @@ local function UpdateESP()
         local root = char and char:FindFirstChild("HumanoidRootPart")
         local head = char and char:FindFirstChild("Head")
         
-        -- ถ้าตัวละครยังไม่โหลด หรือตาย ให้ลบ ESP ซ่อนไปก่อน
         if not char or not root or not head then
             RemoveESP(plr)
             continue
@@ -801,24 +982,21 @@ local function UpdateESP()
         local targetColor = Color3.new(1, 1, 1)
         local teamName = "Unknown"
 
-        -- เช็คเงื่อนไขทีมที่เลือก
         if Options.ESPTargets.Value and plr.Team then
             for name, isSelected in pairs(Options.ESPTargets.Value) do
                 if isSelected and EspSettings[name] and plr.Team.Name == EspSettings[name].TeamName then
                     isTarget = true
                     targetColor = EspSettings[name].Color
                     teamName = name
-                    break -- เจอทีมปุ๊บ หยุดหาเลย (แก้ปัญหาสีแทรกกัน)
+                    break 
                 end
             end
         end
 
         if isTarget then
-            -- ถ้ายังไม่มี ESP ใน Cache ให้สร้างใหม่แค่ครั้งเดียว
             if not ESP_Cache[plr] then
                 ESP_Cache[plr] = {}
                 
-                -- สร้าง Highlight
                 local highlight = Instance.new("Highlight")
                 highlight.Name = "ESPHighlight"
                 highlight.FillTransparency = 0.3
@@ -827,7 +1005,6 @@ local function UpdateESP()
                 highlight.Parent = char
                 ESP_Cache[plr].Highlight = highlight
 
-                -- สร้าง NameTag
                 local nameTag = Instance.new("BillboardGui")
                 nameTag.Name = "ESPNameTag"
                 nameTag.Size = UDim2.new(0, 200, 0, 50)
@@ -852,22 +1029,18 @@ local function UpdateESP()
 
             local cache = ESP_Cache[plr]
             
-            -- อัปเดต Parent กรณีผู้เล่นรีเซ็ตตัวละคร
             if cache.Highlight.Parent ~= char then cache.Highlight.Parent = char end
             if cache.NameTag.Parent ~= char then cache.NameTag.Parent = char end
 
-            -- อัปเดตสี
             cache.Highlight.FillColor = targetColor
             cache.Highlight.OutlineColor = targetColor
 
-            -- คำนวณระยะทาง
             local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             local dist = 0
             if myRoot then
                 dist = math.floor((myRoot.Position - root.Position).Magnitude)
             end
 
-            -- แปลงสีและใส่ข้อมูลลง NameTag
             local r = math.floor(targetColor.R * 255)
             local g = math.floor(targetColor.G * 255)
             local b = math.floor(targetColor.B * 255)
@@ -882,23 +1055,17 @@ local function UpdateESP()
                 )
             end
         else
-            -- ถ้าไม่ได้เลือกทีมนั้นแล้ว ให้ลบ ESP ทิ้ง
             RemoveESP(plr)
         end
     end
 end
 
--- ==========================================
--- 4. ควบคุมปุ่มเปิดปิด
--- ==========================================
 ToggleESP:OnChanged(function()
     local enabled = Options.ESPToggle.Value
 
-    -- เรียกล้างค่าทุกครั้งก่อนสลับโหมด
     _G.ClearOldESP()
 
     if enabled then
-        -- ใช้ RenderStepped เรียก UpdateESP
         EspConnection = RunService.RenderStepped:Connect(UpdateESP)
     end
 end)
@@ -915,6 +1082,7 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
+
 Window:SelectTab(1)
 
-Fluent:Notify({ Title = "Script Loaded", Content = "Enjoy Auto Farm & Eat!", Duration = 5 })
+Fluent:Notify({ Title = "Script Loaded", Content = "FluentPlus Features Activated!", Duration = 5 })
