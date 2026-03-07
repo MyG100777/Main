@@ -1,9 +1,7 @@
-
 local AppName = "Key"
 local OwnerID = "nMJMYtVynp"
 local AppSecret = "9f40c686c099316c5f89a0ec1d3d3e28ced74e57df93a2fa48d94603fe98c10a"
 local Version = "1.0" 
-
 
 local GetKeyLink = "https://discord.gg/PytFmchZ"
 
@@ -12,7 +10,7 @@ local PlaceScripts = {
 }
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local currentPlaceId = game.PlaceId
 local scriptUrl = PlaceScripts[currentPlaceId]
 
@@ -21,15 +19,15 @@ if not scriptUrl then
     return
 end
 
-
 local KeyAuthAPI
 local successLoad, errLoad = pcall(function()
-    KeyAuthAPI = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Luau/main/keyauth.lua"))()
-    KeyAuthAPI:Init(AppName, OwnerID, AppSecret, Version)
+    local KeyAuth = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Luau/main/keyauth.lua"))()
+    KeyAuthAPI = KeyAuth.new(AppName, OwnerID, AppSecret, Version)
+    KeyAuthAPI:Initialize()
 end)
 
 if not successLoad then
-    LocalPlayer:Kick("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ KeyAuth ได้ (โปรดเช็คอินเทอร์เน็ต)")
+    LocalPlayer:Kick("❌ ไม่สามารถเชื่อมต่อ KeyAuth ได้: " .. tostring(errLoad))
     return
 end
 
@@ -42,11 +40,9 @@ local function LoadMainScript()
     end
 end
 
-
 if _G.Key and type(_G.Key) == "string" then
-    -- ส่งคีย์ไปเช็คกับ KeyAuth อัตโนมัติ
     local successAuth, resultAuth = pcall(function()
-        KeyAuthAPI:License(_G.Key)
+        KeyAuthAPI:license(_G.Key)
     end)
     
     if successAuth then
@@ -57,8 +53,7 @@ if _G.Key and type(_G.Key) == "string" then
     end
 end
 
-
-local guiParent = gethui and gethui() or game:GetService("CoreGui")
+local guiParent = (type(gethui) == "function" and gethui()) or game:GetService("CoreGui")
 
 local KeyUI = Instance.new("ScreenGui")
 KeyUI.Name = "GzusKeySystem"
@@ -139,7 +134,6 @@ StatusText.Font = Enum.Font.Gotham
 StatusText.TextSize = 12
 StatusText.Parent = MainFrame
 
-
 VerifyBtn.MouseButton1Click:Connect(function()
     local input = KeyInput.Text
     if input == "" then
@@ -153,7 +147,7 @@ VerifyBtn.MouseButton1Click:Connect(function()
     VerifyBtn.Text = "..."
     
     local isValid, errMsg = pcall(function()
-        KeyAuthAPI:License(input)
+        KeyAuthAPI:license(input)
     end)
     
     if isValid then
