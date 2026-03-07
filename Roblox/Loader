@@ -10,19 +10,31 @@ local PlaceScripts = {
 }
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local currentPlaceId = game.PlaceId
 local scriptUrl = PlaceScripts[currentPlaceId]
+
+-- ฟังก์ชันดักจับ LocalPlayer แบบชัวร์ 100%
+local function GetPlayer()
+    local plr = Players.LocalPlayer
+    if not plr then
+        Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+        plr = Players.LocalPlayer
+    end
+    return plr
+end
+
+local LocalPlayer = GetPlayer()
 
 if not scriptUrl then
     LocalPlayer:Kick("❌ แมพนี้ยังไม่รองรับการใช้งานสคริปต์ Gzus Hub")
     return
 end
 
+print("[Gzus Loader] กำลังเชื่อมต่อ KeyAuth...")
 local KeyAuthAPI
 local successLoad, errLoad = pcall(function()
-    local KeyAuth = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Luau/main/keyauth.lua"))()
-    KeyAuthAPI = KeyAuth.new(AppName, OwnerID, AppSecret, Version)
+    local KeyAuthModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Luau/main/keyauth.lua"))()
+    KeyAuthAPI = KeyAuthModule.new(AppName, OwnerID, AppSecret, Version)
     KeyAuthAPI:Initialize()
 end)
 
@@ -30,8 +42,10 @@ if not successLoad then
     LocalPlayer:Kick("❌ ไม่สามารถเชื่อมต่อ KeyAuth ได้: " .. tostring(errLoad))
     return
 end
+print("[Gzus Loader] เชื่อมต่อ KeyAuth สำเร็จ!")
 
 local function LoadMainScript()
+    print("[Gzus Loader] กำลังโหลดสคริปต์หลัก...")
     local success, err = pcall(function()
         loadstring(game:HttpGet(scriptUrl))()
     end)
@@ -40,8 +54,8 @@ local function LoadMainScript()
     end
 end
 
-if _G.Key and type(_G.Key) == "string" then
-    local successAuth, resultAuth = pcall(function()
+if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
+    local successAuth, _ = pcall(function()
         KeyAuthAPI:license(_G.Key)
     end)
     
@@ -53,7 +67,7 @@ if _G.Key and type(_G.Key) == "string" then
     end
 end
 
-local guiParent = (type(gethui) == "function" and gethui()) or game:GetService("CoreGui")
+local guiParent = game:GetService("CoreGui")
 
 local KeyUI = Instance.new("ScreenGui")
 KeyUI.Name = "GzusKeySystem"
@@ -146,7 +160,7 @@ VerifyBtn.MouseButton1Click:Connect(function()
     StatusText.TextColor3 = Color3.fromRGB(241, 196, 15)
     VerifyBtn.Text = "..."
     
-    local isValid, errMsg = pcall(function()
+    local isValid, _ = pcall(function()
         KeyAuthAPI:license(input)
     end)
     
