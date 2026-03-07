@@ -33,6 +33,7 @@ end
 print("[Gzus Loader] กำลังเชื่อมต่อ KeyAuth...")
 local KeyAuthAPI
 local successLoad, errLoad = pcall(function()
+    -- 🌟 จุดสำคัญ: แก้วิธีเรียกใช้ Module KeyAuth ให้ตรงกับอัปเดตล่าสุดของเขา
     local KeyAuthModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Luau/main/keyauth.lua"))()
     KeyAuthAPI = KeyAuthModule.new(AppName, OwnerID, AppSecret, Version)
     KeyAuthAPI:Initialize()
@@ -54,12 +55,15 @@ local function LoadMainScript()
     end
 end
 
+-- 🌟 ตรวจสอบ _G.Key แบบปลอดภัย ไม่ให้มันไปค้างถ้ารหัสว่างเปล่า
 if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
+    print("[Gzus Loader] กำลังเช็คคีย์อัตโนมัติ...")
     local successAuth, _ = pcall(function()
         KeyAuthAPI:license(_G.Key)
     end)
     
     if successAuth then
+        print("[Gzus Loader] คีย์อัตโนมัติถูกต้อง! โหลดสคริปต์...")
         LoadMainScript()
         return 
     else
@@ -67,6 +71,8 @@ if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
     end
 end
 
+print("[Gzus Loader] กำลังสร้าง UI สำหรับกรอกคีย์...")
+-- 🌟 แก้บัค UI: เอาไปใส่ใน CoreGui แบบดื้อๆ เลย ถ้ารันไม่ขึ้นแสดงว่า Executor กากไป
 local guiParent = game:GetService("CoreGui")
 
 local KeyUI = Instance.new("ScreenGui")
