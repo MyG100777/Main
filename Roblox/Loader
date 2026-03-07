@@ -1,6 +1,8 @@
+-- ==========================================
+-- 🔐 Gzus Hub Loader & KeyAuth System (Direct API Version - ไม่ค้าง 100%)
+-- ==========================================
 local AppName = "Key"
 local OwnerID = "nMJMYtVynp"
-local AppSecret = "9f40c686c099316c5f89a0ec1d3d3e28ced74e57df93a2fa48d94603fe98c10a"
 local Version = "1.0" 
 
 local GetKeyLink = "https://discord.gg/PytFmchZ"
@@ -10,10 +12,8 @@ local PlaceScripts = {
 }
 
 local Players = game:GetService("Players")
-local currentPlaceId = game.PlaceId
-local scriptUrl = PlaceScripts[currentPlaceId]
+local HttpService = game:GetService("HttpService")
 
--- ฟังก์ชันดักจับ LocalPlayer แบบชัวร์ 100%
 local function GetPlayer()
     local plr = Players.LocalPlayer
     if not plr then
@@ -24,56 +24,88 @@ local function GetPlayer()
 end
 
 local LocalPlayer = GetPlayer()
+local currentPlaceId = game.PlaceId
+local scriptUrl = PlaceScripts[currentPlaceId]
 
 if not scriptUrl then
-    LocalPlayer:Kick("❌ แมพนี้ยังไม่รองรับการใช้งานสคริปต์ Gzus Hub")
+    warn("❌ แมพนี้ยังไม่รองรับการใช้งานสคริปต์ (Place ID: " .. tostring(currentPlaceId) .. ")")
     return
 end
 
-print("[Gzus Loader] กำลังเชื่อมต่อ KeyAuth...")
-local KeyAuthAPI
-local successLoad, errLoad = pcall(function()
-    -- 🌟 จุดสำคัญ: แก้วิธีเรียกใช้ Module KeyAuth ให้ตรงกับอัปเดตล่าสุดของเขา
-    local KeyAuthModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Luau/main/keyauth.lua"))()
-    KeyAuthAPI = KeyAuthModule.new(AppName, OwnerID, AppSecret, Version)
-    KeyAuthAPI:Initialize()
-end)
-
-if not successLoad then
-    LocalPlayer:Kick("❌ ไม่สามารถเชื่อมต่อ KeyAuth ได้: " .. tostring(errLoad))
-    return
-end
-print("[Gzus Loader] เชื่อมต่อ KeyAuth สำเร็จ!")
-
+-- ==========================================
+-- ⚙️ ฟังก์ชันโหลดสคริปต์ (เมื่อคีย์ผ่าน)
+-- ==========================================
 local function LoadMainScript()
     print("[Gzus Loader] กำลังโหลดสคริปต์หลัก...")
     local success, err = pcall(function()
         loadstring(game:HttpGet(scriptUrl))()
     end)
     if not success then
-        LocalPlayer:Kick("❌ เกิดข้อผิดพลาดในการโหลดสคริปต์: " .. tostring(err))
+        warn("❌ [Gzus Loader] เกิดข้อผิดพลาดในการโหลดสคริปต์: " .. tostring(err))
     end
 end
 
--- 🌟 ตรวจสอบ _G.Key แบบปลอดภัย ไม่ให้มันไปค้างถ้ารหัสว่างเปล่า
-if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
-    print("[Gzus Loader] กำลังเช็คคีย์อัตโนมัติ...")
-    local successAuth, _ = pcall(function()
-        KeyAuthAPI:license(_G.Key)
-    end)
+-- ==========================================
+-- 🔍 ระบบ KeyAuth API (ยิงตรงเข้า Server ไม่พึ่ง Module นอก)
+-- ==========================================
+local function VerifyKey(inputKey)
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
     
-    if successAuth then
-        print("[Gzus Loader] คีย์อัตโนมัติถูกต้อง! โหลดสคริปต์...")
+    -- 1. สร้าง Session (Init)
+    local initUrl = string.format("https://keyauth.win/api/1.2/?name=%s&ownerid=%s&type=init&ver=%s", AppName, OwnerID, Version)
+    local initSuccess, initReq = pcall(function() return game:HttpGet(initUrl) end)
+    
+    if not initSuccess or not initReq then
+        return false, "เชื่อมต่อเซิร์ฟเวอร์ KeyAuth ไม่สำเร็จ!"
+    end
+    
+    local initData
+    pcall(function() initData = HttpService:JSONDecode(initReq) end)
+    
+    if not initData or not initData.success then
+        return false, (initData and initData.message) or "Init ไม่ผ่าน (เช็ค AppName หรือ OwnerID)"
+    end
+    
+    local sessionId = initData.sessionid
+    
+    -- 2. ตรวจสอบคีย์ (License Check)
+    local licUrl = string.format("https://keyauth.win/api/1.2/?name=%s&ownerid=%s&type=license&key=%s&hwid=%s&sessionid=%s", AppName, OwnerID, inputKey, hwid, sessionId)
+    local licSuccess, licReq = pcall(function() return game:HttpGet(licUrl) end)
+    
+    if not licSuccess or not licReq then
+        return false, "เซิร์ฟเวอร์ KeyAuth ไม่ตอบสนองตอนเช็คคีย์"
+    end
+    
+    local licData
+    pcall(function() licData = HttpService:JSONDecode(licReq) end)
+    
+    if licData and licData.success then
+        return true, "Success"
+    else
+        return false, (licData and licData.message) or "คีย์ไม่ถูกต้อง หรือหมดอายุ!"
+    end
+end
+
+-- ==========================================
+-- 🎮 ระบบ Auto-Login
+-- ==========================================
+if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
+    print("[Gzus Loader] พบคีย์อัตโนมัติ กำลังตรวจสอบ...")
+    local isValid, msg = VerifyKey(_G.Key)
+    
+    if isValid then
+        print("[Gzus Loader] ✅ คีย์ถูกต้อง! โหลดสคริปต์...")
         LoadMainScript()
         return 
     else
-        warn("❌ คีย์ที่ใส่ใน _G.Key ไม่ถูกต้อง, หมดอายุ, หรือ HWID ไม่ตรง!")
+        warn("❌ [Gzus Loader] " .. tostring(msg))
     end
 end
 
-print("[Gzus Loader] กำลังสร้าง UI สำหรับกรอกคีย์...")
--- 🌟 แก้บัค UI: เอาไปใส่ใน CoreGui แบบดื้อๆ เลย ถ้ารันไม่ขึ้นแสดงว่า Executor กากไป
-local guiParent = game:GetService("CoreGui")
+-- ==========================================
+-- 🎨 สร้าง UI สำหรับกรอกคีย์
+-- ==========================================
+local guiParent = (type(gethui) == "function" and gethui()) or game:GetService("CoreGui")
 
 local KeyUI = Instance.new("ScreenGui")
 KeyUI.Name = "GzusKeySystem"
@@ -166,9 +198,7 @@ VerifyBtn.MouseButton1Click:Connect(function()
     StatusText.TextColor3 = Color3.fromRGB(241, 196, 15)
     VerifyBtn.Text = "..."
     
-    local isValid, _ = pcall(function()
-        KeyAuthAPI:license(input)
-    end)
+    local isValid, errMsg = VerifyKey(input)
     
     if isValid then
         StatusText.Text = "Key Verified! Loading..."
@@ -180,7 +210,7 @@ VerifyBtn.MouseButton1Click:Connect(function()
         KeyUI:Destroy() 
         LoadMainScript() 
     else
-        StatusText.Text = "Invalid Key / Expired / HWID Mismatch!"
+        StatusText.Text = errMsg or "Invalid Key!"
         StatusText.TextColor3 = Color3.fromRGB(231, 76, 60)
         VerifyBtn.Text = "Verify Key"
     end
