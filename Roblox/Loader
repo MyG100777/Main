@@ -1,1 +1,179 @@
 
+local AppName = "Key"
+local OwnerID = "nMJMYtVynp"
+local AppSecret = "9f40c686c099316c5f89a0ec1d3d3e28ced74e57df93a2fa48d94603fe98c10a"
+local Version = "1.0" 
+
+
+local GetKeyLink = "https://discord.gg/PytFmchZ"
+
+local PlaceScripts = {
+    [14807448145] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/ThaibanCity",
+}
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local currentPlaceId = game.PlaceId
+local scriptUrl = PlaceScripts[currentPlaceId]
+
+if not scriptUrl then
+    LocalPlayer:Kick("❌ แมพนี้ยังไม่รองรับการใช้งานสคริปต์ Gzus Hub")
+    return
+end
+
+
+local KeyAuthAPI
+local successLoad, errLoad = pcall(function()
+    KeyAuthAPI = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Roblox-Luau/main/keyauth.lua"))()
+    KeyAuthAPI:Init(AppName, OwnerID, AppSecret, Version)
+end)
+
+if not successLoad then
+    LocalPlayer:Kick("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ KeyAuth ได้ (โปรดเช็คอินเทอร์เน็ต)")
+    return
+end
+
+local function LoadMainScript()
+    local success, err = pcall(function()
+        loadstring(game:HttpGet(scriptUrl))()
+    end)
+    if not success then
+        LocalPlayer:Kick("❌ เกิดข้อผิดพลาดในการโหลดสคริปต์: " .. tostring(err))
+    end
+end
+
+
+if _G.Key and type(_G.Key) == "string" then
+    -- ส่งคีย์ไปเช็คกับ KeyAuth อัตโนมัติ
+    local successAuth, resultAuth = pcall(function()
+        KeyAuthAPI:License(_G.Key)
+    end)
+    
+    if successAuth then
+        LoadMainScript()
+        return 
+    else
+        warn("❌ คีย์ที่ใส่ใน _G.Key ไม่ถูกต้อง, หมดอายุ, หรือ HWID ไม่ตรง!")
+    end
+end
+
+
+local guiParent = gethui and gethui() or game:GetService("CoreGui")
+
+local KeyUI = Instance.new("ScreenGui")
+KeyUI.Name = "GzusKeySystem"
+KeyUI.ResetOnSpawn = false
+KeyUI.Parent = guiParent
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 350, 0, 200)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = KeyUI
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "🛡️ Thaiban City - Key System"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+Title.Parent = MainFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0, 310, 0, 40)
+KeyInput.Position = UDim2.new(0, 20, 0, 60)
+KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.PlaceholderText = "Enter your key here..."
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.TextSize = 14
+KeyInput.Text = ""
+KeyInput.ClearTextOnFocus = false
+KeyInput.Parent = MainFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = KeyInput
+
+local VerifyBtn = Instance.new("TextButton")
+VerifyBtn.Size = UDim2.new(0, 150, 0, 40)
+VerifyBtn.Position = UDim2.new(0, 20, 0, 120)
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) 
+VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+VerifyBtn.Text = "Verify Key"
+VerifyBtn.Font = Enum.Font.GothamBold
+VerifyBtn.TextSize = 14
+VerifyBtn.Parent = MainFrame
+
+local VerifyCorner = Instance.new("UICorner")
+VerifyCorner.CornerRadius = UDim.new(0, 6)
+VerifyCorner.Parent = VerifyBtn
+
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0, 150, 0, 40)
+GetKeyBtn.Position = UDim2.new(0, 180, 0, 120)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
+GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.TextSize = 14
+GetKeyBtn.Parent = MainFrame
+
+local GetKeyCorner = Instance.new("UICorner")
+GetKeyCorner.CornerRadius = UDim.new(0, 6)
+GetKeyCorner.Parent = GetKeyBtn
+
+local StatusText = Instance.new("TextLabel")
+StatusText.Size = UDim2.new(1, 0, 0, 20)
+StatusText.Position = UDim2.new(0, 0, 0, 170)
+StatusText.BackgroundTransparency = 1
+StatusText.Text = "Waiting for input..."
+StatusText.TextColor3 = Color3.fromRGB(150, 150, 150)
+StatusText.Font = Enum.Font.Gotham
+StatusText.TextSize = 12
+StatusText.Parent = MainFrame
+
+
+VerifyBtn.MouseButton1Click:Connect(function()
+    local input = KeyInput.Text
+    if input == "" then
+        StatusText.Text = "Please enter a key!"
+        StatusText.TextColor3 = Color3.fromRGB(231, 76, 60)
+        return
+    end
+
+    StatusText.Text = "Checking key securely..."
+    StatusText.TextColor3 = Color3.fromRGB(241, 196, 15)
+    VerifyBtn.Text = "..."
+    
+    local isValid, errMsg = pcall(function()
+        KeyAuthAPI:License(input)
+    end)
+    
+    if isValid then
+        StatusText.Text = "Key Verified! Loading..."
+        StatusText.TextColor3 = Color3.fromRGB(46, 204, 113)
+        VerifyBtn.Text = "Success"
+        VerifyBtn.BackgroundColor3 = Color3.fromRGB(39, 174, 96)
+        
+        task.wait(1)
+        KeyUI:Destroy() 
+        LoadMainScript() 
+    else
+        StatusText.Text = "Invalid Key / Expired / HWID Mismatch!"
+        StatusText.TextColor3 = Color3.fromRGB(231, 76, 60)
+        VerifyBtn.Text = "Verify Key"
+    end
+end)
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    setclipboard(GetKeyLink)
+    StatusText.Text = "Copied link to clipboard!"
+    StatusText.TextColor3 = Color3.fromRGB(52, 152, 219)
+end)
