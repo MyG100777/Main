@@ -1,147 +1,33 @@
--- ==========================================================
--- 🔐 GzusX Auto-Loader & Key System (Fluent Plus Beta)
--- ==========================================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local currentPlaceId = game.PlaceId
 
--- 🎯 1. ใส่ลิงก์ RAW ของไฟล์ keys.txt ใน GitHub ลูกพี่ที่นี่
-local KeyFileURL = "https://raw.githubusercontent.com/ใส่ลิงก์RAWของลูกพี่ตรงนี้/keys.txt"
-
--- 🎯 2. สคริปต์หลักที่จะให้รันหลังจากคีย์ผ่าน
-local PlaceScripts = {
+local DiscordLink = "https://discord.gg/JyMPreZ7"
+local SupportedGames = {
     [14807448145] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/ThaibanCity"
 }
 
--- ==========================================================
--- ⚙️ ระบบเช็คคีย์หลังบ้าน (Backend Verification)
--- ==========================================================
-local function VerifyKey(enteredKey)
-    if not enteredKey or enteredKey == "" then return false end
+local scriptUrl = SupportedGames[game.PlaceId]
+
+if scriptUrl then
+    pcall(function() setclipboard(DiscordLink) end)
     
-    local success, rawKeys = pcall(function()
-        return game:HttpGet(KeyFileURL)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "GzusX Loaded!",
+            Text = "คัดลอกลิงก์ Discord ให้แล้ว! เข้า Discord เผื่อติดตามข่าวสาร Script GzusX ",
+            Duration = 5
+        })
     end)
     
-    if success and rawKeys then
-        -- สแกนหาคีย์ทีละบรรทัด (ป้องกันคนพิมพ์คีย์มั่วแล้วฟลุ๊คติด)
-        for validKey in string.gmatch(rawKeys, "[^\r\n]+") do
-            -- ตัดช่องว่างซ้ายขวาเผื่อก็อปปี้ติดมา
-            validKey = validKey:gsub("^%s*(.-)%s*$", "%1") 
-            if validKey == enteredKey then
-                return true
-            end
-        end
+    task.wait(0.5)
+    
+    local ok, err = pcall(function()
+        loadstring(game:HttpGet(scriptUrl))()
+    end)
+
+    if not ok then
+        LocalPlayer:Kick("GzusX Error: " .. tostring(err))
     end
-    return false
+else
+    LocalPlayer:Kick("แมพนี้ยังไม่รองรับ GzusX")
 end
-
--- ฟังก์ชันรันสคริปต์หลัก
-local function LoadMainScript(destroyUI)
-    local scriptUrl = PlaceScripts[currentPlaceId]
-
-    if scriptUrl then
-        -- ถ้ามีหน้าต่าง UI เปิดอยู่ ให้สั่งลบทิ้งไปเลย
-        if destroyUI and _G.FluentWindow then
-            pcall(function() _G.FluentWindow:Destroy() end)
-        end
-        
-        local ok, err = pcall(function()
-            loadstring(game:HttpGet(scriptUrl))()
-        end)
-
-        if not ok then
-            LocalPlayer:Kick("GzusX Loader: สคริปต์หลักมีปัญหา ขัดข้อง: " .. tostring(err))
-        end
-    else
-        LocalPlayer:Kick("GzusX Loader: แมพนี้ยังไม่รองรับสคริปต์ของเรา!")
-    end
-end
-
--- ==========================================================
--- 🚀 ระบบ Auto-Login เช็คจาก _G.Key 
--- ==========================================================
-if _G.Key and type(_G.Key) == "string" and _G.Key ~= "" then
-    if VerifyKey(_G.Key) then
-        -- ถ้าคีย์ถูก โหลดสคริปต์หลักทันทีแบบเงียบๆ
-        LoadMainScript(false)
-        return -- สั่งหยุดการทำงานตรงนี้เลย ไม่ต้องโหลด UI
-    else
-        warn("[GzusX] _G.Key ไม่ถูกต้องหรือหมดอายุ! กำลังเปิดหน้าต่างให้ใส่คีย์ใหม่...")
-    end
-end
-
--- ==========================================================
--- 🎨 ระบบ UI ธรรมดา (ถ้าไม่ได้ใส่ _G.Key หรือใส่ผิด)
--- ==========================================================
-local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
-local Options = Fluent.Options
-_G.FluentWindow = Fluent -- เซฟ UI ลงตัวแปรระบบไว้สั่งทำลายตอนล็อกอินผ่าน
-
-local Window = Fluent:CreateWindow({
-    Title = "GzusX Loader",
-    SubTitle = "Authentication",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(450, 250), -- ขนาดย่อส่วน พอดีกับหน้าล็อคอิน
-    Acrylic = false,
-    Theme = "Darker", 
-    MinimizeKey = Enum.KeyCode.RightControl
-})
-
-local Tabs = {
-    KeySystem = Window:AddTab({ Title = "Key System", Icon = "lock" })
-}
-
-Tabs.KeySystem:AddParagraph({
-    Title = "🔒 Welcome to GzusX",
-    Content = "กรุณาใส่คีย์ (Key) หรือตั้งค่า _G.Key ก่อนรันเพื่อความรวดเร็ว!"
-})
-
-local InputKey = ""
-Tabs.KeySystem:AddInput("KeyInputBox", {
-    Title = "Enter Access Key",
-    Default = "",
-    Placeholder = "วางคีย์ของคุณที่นี่...",
-    Numeric = false,
-    Finished = false,
-    Callback = function(Value)
-        -- ตัดช่องว่างเผื่อลูกค้าก๊อปมาติดเคาะวรรค
-        InputKey = Value:gsub("^%s*(.-)%s*$", "%1")
-    end
-})
-
-Tabs.KeySystem:AddButton({
-    Title = "Verify & Load Script",
-    Description = "กดเพื่อตรวจสอบคีย์",
-    Callback = function()
-        local checkVal = InputKey ~= "" and InputKey or Options.KeyInputBox.Value
-        
-        if VerifyKey(checkVal) then
-            Fluent:Notify({
-                Title = "Success!",
-                Content = "คีย์ถูกต้อง! กำลังโหลด GzusX...",
-                Duration = 2
-            })
-            task.wait(1)
-            LoadMainScript(true) -- ส่ง true ไปเพื่อสั่งทำลายหน้าต่าง UI อันนี้ทิ้ง
-        else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "คีย์ไม่ถูกต้อง หรือคีย์หมดอายุแล้ว!",
-                Duration = 3
-            })
-        end
-    end
-})
-
-Tabs.KeySystem:AddButton({
-    Title = "Get Key (Discord)",
-    Description = "คัดลอกลิงก์ดิสคอร์ดเพื่อไปรับคีย์",
-    Callback = function()
-        local discordLink = "https://discord.gg/yourdiscordlink" -- เปลี่ยนเป็นลิงก์ดิสลูกพี่
-        setclipboard(discordLink)
-        Fluent:Notify({ Title = "Copied!", Content = "คัดลอกลิงก์ Discord แล้ว!", Duration = 3 })
-    end
-})
-
-Window:SelectTab(1)
