@@ -11,10 +11,20 @@ local scriptUrl = SupportedGames[game.PlaceId]
 if scriptUrl then
     pcall(function() setclipboard(DiscordLink) end)
     
+
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+    
+   
+    while not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
+        task.wait(0.5)
+    end
+    
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "GzusX Loaded!",
-            Text = "คัดลอกลิงก์ Discord ให้แล้ว! เข้า Discord เผื่อติดตามข่าวสาร Script GzusX ",
+            Text = "คัดลอกลิงก์ Discord ให้แล้ว! เข้า Discord เผื่อติดตามข่าวสาร Script GzusX",
             Duration = 5
         })
     end)
@@ -26,7 +36,7 @@ if scriptUrl then
     end)
 
     if not ok then
-        LocalPlayer:Kick("GzusX Error: " .. tostring(err))
+        LocalPlayer:Kick("\n❌ GzusX Error ❌\n\nเกิดข้อผิดพลาดในการรันสคริปต์\n\nรายละเอียด: " .. tostring(err))
     end
 else
     LocalPlayer:Kick("แมพนี้ยังไม่รองรับ GzusX")
