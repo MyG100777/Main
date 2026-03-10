@@ -3,12 +3,10 @@ repeat task.wait() until game.Players.LocalPlayer
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-Character:WaitForChild("HumanoidRootPart")
 
 repeat task.wait() until workspace:FindFirstChildOfClass("Camera")
 
-task.wait(2)
+task.wait(1)
 
 local DiscordLink = "https://discord.gg/JyMPreZ7"
 
@@ -24,7 +22,9 @@ if not scriptUrl then
 end
 
 pcall(function()
-    setclipboard(DiscordLink)
+    if setclipboard then
+        setclipboard(DiscordLink)
+    end
 end)
 
 pcall(function()
@@ -40,7 +40,7 @@ local tries = 0
 local maxTries = 3
 
 while not success and tries < maxTries do
-    tries += 1
+    tries = tries + 1 
 
     local ok, result = pcall(function()
         return game:HttpGet(scriptUrl)
@@ -55,6 +55,13 @@ while not success and tries < maxTries do
 
         if not runSuccess then
             warn("Script Runtime Error:", err)
+            pcall(function()
+                game:GetService("StarterGui"):SetCore("SendNotification",{
+                    Title = "❌ Script Error",
+                    Text = tostring(err),
+                    Duration = 15
+                })
+            end)
         end
     else
         warn("Load attempt "..tries.." failed")
@@ -63,5 +70,11 @@ while not success and tries < maxTries do
 end
 
 if not success then
-    warn("❌ โหลดสคริปไม่สำเร็จ ")
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "❌ Loader Failed",
+            Text = "โหลดสคริปไม่สำเร็จ โปรดเช็คเน็ตหรือตัวรันของคุณ",
+            Duration = 5
+        })
+    end)
 end
