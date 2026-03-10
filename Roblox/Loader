@@ -1,43 +1,67 @@
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+Character:WaitForChild("HumanoidRootPart")
+
+repeat task.wait() until workspace:FindFirstChildOfClass("Camera")
+
+task.wait(2)
 
 local DiscordLink = "https://discord.gg/JyMPreZ7"
+
 local SupportedGames = {
     [14807448145] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/ThaibanCity"
 }
 
 local scriptUrl = SupportedGames[game.PlaceId]
 
-if scriptUrl then
-    pcall(function() setclipboard(DiscordLink) end)
-    
+if not scriptUrl then
+    LocalPlayer:Kick("❌ Map นี้ยังไม่รองรับ GzusX")
+    return
+end
 
-    if not game:IsLoaded() then
-        game.Loaded:Wait()
-    end
-    
-   
-    while not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") do
-        task.wait(0.5)
-    end
-    
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "GzusX Loaded!",
-            Text = "คัดลอกลิงก์ Discord ให้แล้ว! เข้า Discord เผื่อติดตามข่าวสาร Script GzusX",
-            Duration = 5
-        })
-    end)
-    
-    task.wait(0.5)
-    
-    local ok, err = pcall(function()
-        loadstring(game:HttpGet(scriptUrl))()
+pcall(function()
+    setclipboard(DiscordLink)
+end)
+
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification",{
+        Title = "GzusX Loader",
+        Text = "Loading Script...",
+        Duration = 5
+    })
+end)
+
+local success = false
+local tries = 0
+local maxTries = 3
+
+while not success and tries < maxTries do
+    tries += 1
+
+    local ok, result = pcall(function()
+        return game:HttpGet(scriptUrl)
     end)
 
-    if not ok then
-        LocalPlayer:Kick("\n❌ GzusX Error ❌\n\nเกิดข้อผิดพลาดในการรันสคริปต์\n\nรายละเอียด: " .. tostring(err))
+    if ok and result then
+        success = true
+
+        local runSuccess, err = pcall(function()
+            loadstring(result)()
+        end)
+
+        if not runSuccess then
+            warn("Script Runtime Error:", err)
+        end
+    else
+        warn("Load attempt "..tries.." failed")
+        task.wait(2)
     end
-else
-    LocalPlayer:Kick("แมพนี้ยังไม่รองรับ GzusX")
+end
+
+if not success then
+    warn("❌ โหลดสคริปไม่สำเร็จ ")
 end
