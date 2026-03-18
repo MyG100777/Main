@@ -12,7 +12,7 @@ local DiscordLink = "https://discord.gg/JyMPreZ7"
 
 local SupportedGames = {
     [14807448145] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/ThaibanCity",
-    [130594398886540] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/ThaibanCity"
+    [130594398886540] = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Garden%20Horizons"
 }
 
 local scriptUrl = SupportedGames[game.PlaceId]
