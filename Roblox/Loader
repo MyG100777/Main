@@ -14,17 +14,15 @@ local sailorScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/head
 local gardenScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Garden%20Horizons"
 
 local SupportedGames = {
-
-    [77747658251236]  = sailorScript,
-    [99684056491472]  = sailorScript,
-    [123955125827131] = sailorScript,
-    [75159314259063]  = sailorScript,
-    [96767841099256] = sailorScript,
-    
-    [130594398886540] = gardenScript
+    ["77747658251236"] = sailorScript,
+    ["99684056491472"] = sailorScript,
+    ["123955125827131"] = sailorScript,
+    ["75159314259063"] = sailorScript,
+    ["96767841099256"] = sailorScript,
+    ["130594398886540"] = gardenScript
 }
 
-local scriptUrl = SupportedGames[game.PlaceId]
+local scriptUrl = SupportedGames[tostring(game.PlaceId)]
 
 if not scriptUrl then
     LocalPlayer:Kick("❌ Map นี้ยังไม่รองรับ GzusX")
