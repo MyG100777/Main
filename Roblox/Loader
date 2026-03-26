@@ -19,6 +19,7 @@ local SupportedGames = {
     ["123955125827131"] = sailorScript,
     ["75159314259063"] = sailorScript,
     ["96767841099256"] = sailorScript,
+    ["138368689293913"] = sailorScript,
     ["130594398886540"] = gardenScript
 }
 
