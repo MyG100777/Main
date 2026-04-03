@@ -21,7 +21,8 @@ local SupportedGames = {
     ["75159314259063"] = sailorScript,
     ["96767841099256"] = sailorScript,
     ["138368689293913"] = sailorScript,
-    ["130594398886540"] = gardenScript
+    ["130594398886540"] = gardenScript,
+    ["14807448145"] = thaibanScript
 }
 
 local scriptUrl = SupportedGames[tostring(game.PlaceId)]
