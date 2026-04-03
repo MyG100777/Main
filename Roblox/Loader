@@ -12,6 +12,7 @@ local DiscordLink = "https://discord.gg/JyMPreZ7"
 
 local sailorScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sailor%20Piece"
 local gardenScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Garden%20Horizons"
+local thaibanScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Thaiban%20City"
 
 local SupportedGames = {
     ["77747658251236"] = sailorScript,
