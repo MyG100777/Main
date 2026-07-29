@@ -11,7 +11,6 @@ task.wait(1)
 local DiscordLink = "https://discord.gg/JyMPreZ7"
 
 local sailorScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sp"
-local gardenScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Garden%20Horizons"
 local thaibanScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Thaiban%20City"
 
 local SupportedGames = {
@@ -21,7 +20,6 @@ local SupportedGames = {
     ["75159314259063"] = sailorScript,
     ["96767841099256"] = sailorScript,
     ["138368689293913"] = sailorScript,
-    ["130594398886540"] = gardenScript,
     ["14807448145"] = thaibanScript
 }
 
