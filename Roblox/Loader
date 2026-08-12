@@ -11,7 +11,7 @@ task.wait(1)
 local DiscordLink = "https://discord.gg/JyMPreZ7"
 
 local thaibanScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Thaiban%20City"
-local SailueatarchiwaScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sailueatarchiwa.lua"
+local SailueatarchiwaScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sailueatarchiwav.lua"
 
 local SupportedGames = {
     ["14807448145"] = thaibanScript,
