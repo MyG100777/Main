@@ -50,11 +50,16 @@ while not success and tries < maxTries do
         return game:HttpGet(scriptUrl)
     end)
 
-    if ok and result then
+    if ok and type(result) == "string" then
         success = true
 
         local runSuccess, err = pcall(function()
-            loadstring(result)()
+            local loadedFunc, loadErr = loadstring(result)
+            if loadedFunc then
+                loadedFunc()
+            else
+                error(loadErr or "loadstring failed (returned nil)")
+            end
         end)
 
         if not runSuccess then
