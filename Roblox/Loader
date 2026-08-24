@@ -11,7 +11,7 @@ task.wait(1)
 local DiscordLink = "https://discord.gg/JyMPreZ7"
 
 local SailueatarchiwaScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sailueatarchiwa.lua"
-local RedSwordScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/RedSword.lua"
+local RedSwordScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Rs.lua"
 
 local SupportedGames = {
     ["78520309641318"] = RedSwordScript,
