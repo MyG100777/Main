@@ -13,7 +13,7 @@ local DiscordLink = "https://discord.gg/JyMPreZ7"
 local SailueatarchiwaScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/Sailueatarchiwa.lua"
 
 local SupportedGames = {
-    ["131481383443764"] = SailueatarchiwaScriptx
+    ["131481383443764"] = SailueatarchiwaScript
 }
 
 local scriptUrl = SupportedGames[tostring(game.PlaceId)]
