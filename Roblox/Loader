@@ -21,6 +21,7 @@ local BASE_URL = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/ma
 
 local GamesMap = {
     [131481383443764] = "Sailueatarchiwa.lua",
+    [118805555015549] = "LootToForge.lua",
 }
 
 local function Notify(title, text, icon, duration)
