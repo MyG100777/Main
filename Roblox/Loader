@@ -1,87 +1,91 @@
-repeat task.wait() until game:IsLoaded()
-repeat task.wait() until game.Players.LocalPlayer
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-repeat task.wait() until workspace:FindFirstChildOfClass("Camera")
-
-task.wait(1)
-
-local DiscordLink = "https://discord.gg/JyMPreZ7"
-
-local SailueatarchiwaScript = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/SailueatarchiwaX.lua"
-
-local SupportedGames = {
-    ["131481383443764"] = SailueatarchiwaScript
-}
-
-local scriptUrl = SupportedGames[tostring(game.PlaceId)]
-
-if not scriptUrl then
-    LocalPlayer:Kick("❌ Map นี้ยังไม่รองรับ GzusX")
+if getgenv().Gzus_Loader_Executed then
+    warn("[Gzus Loader] Loader is already running!")
     return
 end
+getgenv().Gzus_Loader_Executed = true
 
-pcall(function()
-    if setclipboard then
-        setclipboard(DiscordLink)
+local Services = setmetatable({}, {
+    __index = function(_, serviceName)
+        return game:GetService(serviceName)
     end
-end)
+})
 
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification",{
-        Title = "GzusX Loader",
-        Text = "Loading Script...",
-        Duration = 5
-    })
-end)
+local StarterGui = Services.StarterGui
+local MarketplaceService = Services.MarketplaceService
+local Players = Services.Players
+local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local GameId = game.GameId
 
-local success = false
-local tries = 0
-local maxTries = 3
+local BASE_URL = "https://raw.githubusercontent.com/MyG100777/Main/refs/heads/main/Roblox/Games/"
 
-while not success and tries < maxTries do
-    tries = tries + 1 
+local GamesMap = {
+    [131481383443764] = "SailueatarchiwaX.lua",
+}
 
-    local ok, result = pcall(function()
-        return game:HttpGet(scriptUrl)
-    end)
-
-    if ok and type(result) == "string" then
-        success = true
-
-        local runSuccess, err = pcall(function()
-            local loadedFunc, loadErr = loadstring(result)
-            if loadedFunc then
-                loadedFunc()
-            else
-                error(loadErr or "loadstring failed (returned nil)")
-            end
-        end)
-
-        if not runSuccess then
-            warn("Script Runtime Error:", err)
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification",{
-                    Title = "❌ Script Error",
-                    Text = tostring(err),
-                    Duration = 15
-                })
-            end)
-        end
-    else
-        warn("Load attempt "..tries.." failed")
-        task.wait(2)
-    end
-end
-
-if not success then
+local function Notify(title, text, icon, duration)
     pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification",{
-            Title = "❌ Loader Failed",
-            Text = "โหลดสคริปไม่สำเร็จ โปรดเช็คเน็ตหรือตัวรันของคุณ",
-            Duration = 5
+        StarterGui:SetCore("SendNotification", {
+            Title = title or "Gzus Loader",
+            Text = text or "",
+            Icon = icon or nil,
+            Duration = duration or 5
         })
     end)
 end
+
+local function GetGameName()
+    local success, info = pcall(function()
+        return MarketplaceService:GetProductInfo(PlaceId).Name
+    end)
+    return success and info or "ไม่พบชื่อเกม"
+end
+
+local function FetchScript(fileName)
+    local fullUrl = BASE_URL .. fileName
+    local success, content = pcall(function()
+        return game:HttpGet(fullUrl, true)
+    end)
+    
+    if success and content and #content > 0 then
+        return content
+    end
+    return nil
+end
+
+local function Main()
+    local gameName = GetGameName()
+    Notify("Gzus Loader", "กำลังเช็คเกม: " .. gameName, nil, 3)
+    task.wait(0.5)
+
+    local targetScript = GamesMap[PlaceId] or GamesMap[GameId]
+
+    if not targetScript then
+        LocalPlayer:Kick("Gzus Loader: ยังไม่รองรับแมพนี้ (PlaceId: " .. tostring(PlaceId) .. ")")
+        return
+    end
+
+    local rawCode = FetchScript(targetScript)
+
+    if not rawCode then
+        getgenv().Gzus_Loader_Executed = false
+        return
+    end
+
+    local loadedFunc, syntaxError = loadstring(rawCode)
+
+    if not loadedFunc then
+        getgenv().Gzus_Loader_Executed = false
+        return
+    end
+
+    local success, execError = pcall(loadedFunc)
+
+    if success then
+        Notify("Gzus Loader", "โหลด " .. targetScript .. " เรียบร้อย!", nil, 4)
+    else
+        getgenv().Gzus_Loader_Executed = false
+    end
+end
+
+Main()
