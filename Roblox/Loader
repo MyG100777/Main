@@ -1,9 +1,3 @@
-if getgenv().Gzus_Loader_Executed then
-    warn("[Gzus Loader] Loader is already running!")
-    return
-end
-getgenv().Gzus_Loader_Executed = true
-
 local Services = setmetatable({}, {
     __index = function(_, serviceName)
         return game:GetService(serviceName)
@@ -69,14 +63,14 @@ local function Main()
     local rawCode = FetchScript(targetScript)
 
     if not rawCode then
-        getgenv().Gzus_Loader_Executed = false
         return
     end
 
     local loadedFunc, syntaxError = loadstring(rawCode)
 
     if not loadedFunc then
-        getgenv().Gzus_Loader_Executed = false
+        warn("[Gzus Loader] Syntax Error: ", syntaxError)
+        Notify("Gzus Loader", "โหลดสคริปต์ไม่สำเร็จ (Syntax Error)", nil, 4)
         return
     end
 
@@ -84,8 +78,6 @@ local function Main()
 
     if success then
         Notify("Gzus Loader", "โหลด " .. targetScript .. " เรียบร้อย!", nil, 4)
-    else
-        getgenv().Gzus_Loader_Executed = false
     end
 end
 
